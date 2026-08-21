@@ -1,0 +1,212 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Ground/air acceleration and friction are a GDScript port of PM_Friction and
+# PM_Accelerate from Quake III Arena's bg_pmove.c (id Software, GPL-2.0 —
+# https://github.com/id-Software/Quake-III-Arena). PM_Accelerate projects the
+# current velocity onto the wish direction *before* clamping the acceleration
+# delta for this tick — that projection is why turning in the air (or on the
+# ground) doesn't cost you the speed you already have, and it is preserved
+# exactly below. Do not "simplify" it.
+extends CharacterBody3D
+class_name PMove
+
+# All speed/accel/gravity constants below are in Quake units (see
+# scripts/core/units.gd) so documented Quake III tuning values can be dropped
+# in directly. They're converted to metres only where they meet Godot's
+# physics, in _physics_process.
+
+@export_group("Ground")
+@export var move_speed: float = 320.0
+@export var ground_accel: float = 10.0
+@export var ground_friction: float = 6.0
+@export var stop_speed: float = 200.0
+
+@export_group("Air")
+@export var air_accel: float = 1.0
+
+@export_group("Jump & gravity")
+@export var gravity_qu: float = 800.0
+@export var jump_velocity_qu: float = 270.0
+
+@export_group("Crouch")
+@export var standing_height: float = 1.8
+@export var crouch_height: float = 1.0
+@export var crouch_speed_scale: float = 0.5
+@export var crouch_transition_speed: float = 8.0
+@export var eye_offset_from_top: float = 0.15
+
+@export_group("Sprint")
+@export var sprint_speed_scale: float = 1.6
+
+@export_group("Stepping & slopes")
+@export var max_step_height: float = 0.3
+@export var floor_max_angle_deg: float = 45.0
+
+@onready var _collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var _head: Node3D = $Head
+
+var _velocity_qu: Vector3 = Vector3.ZERO
+var _current_height: float = standing_height
+
+## Q3 bg_pmove.c PM_Friction, ported. `vel` is a full 3D velocity (Quake Z-up
+## became Godot Y-up: the vertical axis is `y`, not `z`). `grounded` mirrors
+## Q3's `pm->walking` — friction only bites while standing on the ground.
+static func pm_friction(vel: Vector3, friction: float, stopspeed: float, delta: float, grounded: bool) -> Vector3:
+	var speed := vel.length()
+	if speed < 1.0:
+		return Vector3(0.0, vel.y, 0.0)
+
+	var drop := 0.0
+	if grounded:
+		var control := stopspeed if speed < stopspeed else speed
+		drop += control * friction * delta
+
+	var new_speed := speed - drop
+	if new_speed < 0.0:
+		new_speed = 0.0
+	new_speed /= speed
+
+	return vel * new_speed
+
+## Q3 bg_pmove.c PM_Accelerate, ported verbatim. `wishdir` must be normalized
+## (or zero). The projection of the current velocity onto wishdir — computed
+## before the accel delta is clamped to what's still needed — is the whole
+## point: accelerating perpendicular to your current velocity adds speed
+## without first "paying it down".
+static func pm_accelerate(vel: Vector3, wishdir: Vector3, wishspeed: float, accel: float, delta: float) -> Vector3:
+	var current_speed := vel.dot(wishdir)
+	var add_speed := wishspeed - current_speed
+	if add_speed <= 0.0:
+		return vel
+
+	var accel_speed := accel * delta * wishspeed
+	if accel_speed > add_speed:
+		accel_speed = add_speed
+
+	return vel + wishdir * accel_speed
+
+
+func _ready() -> void:
+	_current_height = standing_height
+	_apply_height(_current_height)
+
+
+func _physics_process(delta: float) -> void:
+	floor_max_angle = deg_to_rad(floor_max_angle_deg)
+
+	_handle_crouch(delta)
+
+	var grounded := is_on_floor()
+	var wish := _wish_velocity()
+
+	if grounded and Input.is_action_just_pressed("jump"):
+		_velocity_qu.y = jump_velocity_qu
+		grounded = false
+
+	_velocity_qu = pm_friction(_velocity_qu, ground_friction, stop_speed, delta, grounded)
+
+	if grounded:
+		_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, ground_accel, delta)
+	else:
+		_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, air_accel, delta)
+		_velocity_qu.y -= gravity_qu * delta
+
+	velocity = _velocity_qu * Units.QU_TO_M
+	_move_with_step_up(grounded)
+	_velocity_qu = velocity * Units.M_TO_QU
+
+
+## Returns { dir: Vector3 (world-space, normalized, flattened), speed: float (qu/s) }.
+## Equivalent to Q3's PM_CmdScale + wishvel/wishdir/wishspeed dance, specialised
+## for continuous analog input instead of Q3's -127..127 quantized usercmd: for
+## a unit-length input vector, PM_CmdScale's diagonal-normalization collapses
+## to exactly "normalize the input, scale by its own length", which is what
+## this does directly.
+func _wish_velocity() -> Dictionary:
+	var input := Vector2(
+		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
+		Input.get_action_strength("move_forward") - Input.get_action_strength("move_backward")
+	)
+	var input_len := input.length()
+	if input_len > 1.0:
+		input = input / input_len
+		input_len = 1.0
+
+	var forward := -global_transform.basis.z
+	var right := global_transform.basis.x
+	forward.y = 0.0
+	right.y = 0.0
+	forward = forward.normalized()
+	right = right.normalized()
+
+	var wishdir := forward * input.y + right * input.x
+	if wishdir.length() > 0.0001:
+		wishdir = wishdir.normalized()
+
+	var speed_scale := 1.0
+	if _is_crouched():
+		speed_scale = crouch_speed_scale
+	elif Input.is_action_pressed("sprint") and input.y > 0.1:
+		speed_scale = sprint_speed_scale
+
+	return {"dir": wishdir, "speed": move_speed * input_len * speed_scale}
+
+
+func _is_crouched() -> bool:
+	return Input.is_action_pressed("crouch")
+
+
+func _handle_crouch(delta: float) -> void:
+	var target_height := crouch_height if _is_crouched() else standing_height
+
+	if target_height > _current_height:
+		var grow := target_height - _current_height
+		if test_move(global_transform, Vector3.UP * grow):
+			target_height = _current_height
+
+	_current_height = move_toward(_current_height, target_height, crouch_transition_speed * delta)
+	_apply_height(_current_height)
+
+
+func _apply_height(height: float) -> void:
+	var shape: CapsuleShape3D = _collision_shape.shape
+	shape.height = height
+	_collision_shape.position.y = height * 0.5
+	_head.position.y = height - eye_offset_from_top
+
+
+## move_and_slide() handles ramps within floor_max_angle on its own. Godot has
+## no built-in stair auto-climb, so: try the normal slide; if it was blocked
+## by something wall-shaped while we started the tick grounded, retry from a
+## lifted position and settle back down. If there's no floor within
+## max_step_height on the way down, it wasn't a step — undo the lift.
+func _move_with_step_up(was_grounded: bool) -> void:
+	var pre_position := global_position
+	var pre_velocity := velocity
+
+	move_and_slide()
+
+	if not was_grounded or not _blocked_by_low_step():
+		return
+
+	global_position = pre_position
+	velocity = pre_velocity
+
+	if test_move(global_transform, Vector3.UP * max_step_height):
+		return # no headroom above to step into; keep the blocked slide result
+
+	global_position.y += max_step_height
+	move_and_slide()
+
+	if move_and_collide(Vector3.DOWN * max_step_height) == null:
+		global_position = pre_position
+		velocity = pre_velocity
+		move_and_slide()
+
+
+func _blocked_by_low_step() -> bool:
+	for i in get_slide_collision_count():
+		var normal := get_slide_collision(i).get_normal()
+		if absf(normal.y) < 0.3:
+			return true
+	return false
