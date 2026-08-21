@@ -15,13 +15,13 @@ than month six.
 
 Get a repo that builds, tests, and runs an empty scene in CI.
 
-- [ ] `project.godot` on Godot 4.7, Forward+ renderer
-- [ ] Physics tick 120, 3D physics interpolation on, `use_accumulated_input = false`
-- [ ] `LICENSE` (GPL-2.0-or-later), `README.md`, `CLAUDE.md`, `.gitignore`
+- [x] `project.godot` on Godot 4.7, Forward+ renderer
+- [x] Physics tick 120, 3D physics interpolation on, `use_accumulated_input = false`
+- [x] `LICENSE` (GPL-2.0-or-later), `README.md`, `CLAUDE.md`, `.gitignore`
       (excludes `.godot/`, `build/`)
-- [ ] gdUnit4 installed under `addons/`
-- [ ] GitHub Actions: headless import → run tests → export Linux binary as artefact
-- [ ] `docs/ASSETS.md` and `docs/TUNING.md` created empty with headers
+- [x] gdUnit4 installed under `addons/`
+- [x] GitHub Actions: headless import → run tests → export Linux binary as artefact
+- [x] `docs/ASSETS.md` and `docs/TUNING.md` created empty with headers
 
 **Done when:** CI is green on an empty commit and produces a runnable binary.
 
