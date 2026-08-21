@@ -1,0 +1,12 @@
+# Godot 4
+.godot/
+/android/
+
+# Build output
+build/
+*.x86_64
+*.AppImage
+
+# Editor / OS
+*.tmp
+.DS_Store
