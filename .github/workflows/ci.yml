@@ -35,6 +35,17 @@ jobs:
       - name: Reimport assets
         run: godot --headless --path . --import
 
+      - name: Install export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          if [ -d "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" ]; then
+            cp -r "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" "$HOME/.local/share/godot/export_templates/"
+          else
+            curl -sL -o /tmp/templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+            unzip -q /tmp/templates.tpz -d /tmp
+            mv /tmp/templates "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          fi
+
       - name: Export Linux/X11 release
         run: |
           mkdir -v -p build
