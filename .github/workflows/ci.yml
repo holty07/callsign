@@ -43,7 +43,6 @@ jobs:
 
       - name: Install export templates
         run: |
-          set -x
           mkdir -p "$HOME/.local/share/godot/export_templates"
           if [ -d "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" ]; then
             cp -r "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" "$HOME/.local/share/godot/export_templates/"
@@ -52,14 +51,17 @@ jobs:
             unzip -q /tmp/templates.tpz -d /tmp
             mv /tmp/templates "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           fi
-          ls -la "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/" | grep linux
-          sha256sum "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/linux_release.x86_64"
-          sha256sum "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable/linux_release.x86_64" || true
 
       - name: Export Linux/X11 release
         run: |
           mkdir -v -p build
-          godot --headless --verbose --path . --export-release "Linux/X11" build/callsign.x86_64
+          # Godot's headless editor is known to segfault during shutdown
+          # *after* a successful export (savepack completes, then it crashes
+          # tearing down XR/editor-settings state on exit). Don't trust the
+          # exit code — verify the output files landed instead.
+          godot --headless --path . --export-release "Linux/X11" build/callsign.x86_64 || true
+          test -s build/callsign.x86_64
+          test -s build/callsign.pck
 
       - name: Upload build artefact
         uses: actions/upload-artifact@v4
