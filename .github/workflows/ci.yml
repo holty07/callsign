@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  test:
+    name: Import & test
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reimport assets
+        run: godot --headless --path . --import
+
+      - name: Run gdUnit4 test suite
+        run: godot --headless --path . -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a tests/ --ignoreHeadlessMode
+
+  export-linux:
+    name: Export Linux binary
+    needs: test
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reimport assets
+        run: godot --headless --path . --import
+
+      - name: Export Linux/X11 release
+        run: |
+          mkdir -v -p build
+          godot --headless --path . --export-release "Linux/X11" build/callsign.x86_64
+
+      - name: Upload build artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: callsign-linux-x86_64
+          path: build/
+          if-no-files-found: error

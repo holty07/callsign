@@ -101,7 +101,12 @@ Any PR touching `pmove.gd` must include or update tests in `tests/test_pmove.gd`
 
 ## Commands
 
-```bash
+The developer's shell is **fish**, not bash. When suggesting or running shell
+commands, use fish syntax: no heredocs (`<<EOF`), no `export VAR=x` (use `set -x VAR
+x`), no `$(...)` preferred over fish's `(...)`, and no bash-only test constructs.
+Write multi-line files with `printf` or a file-creation tool rather than heredocs.
+
+```fish
 # Run the game
 godot --path . 
 
