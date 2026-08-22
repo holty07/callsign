@@ -53,7 +53,7 @@ One rifle done properly beats three done badly. Build the base system, ship one 
 
 - [ ] `WeaponBase` — fire rate, magazine, reserve ammo, reload, hipfire spread cone
 - [x] Hitscan with per-shot spread, damage falloff by distance, headshot multiplier
-- [ ] Recoil: deterministic vertical climb + seeded horizontal drift, with recovery
+- [x] Recoil: deterministic vertical climb + seeded horizontal drift, with recovery
 - [ ] ADS: FOV shift, movement speed scalar, spread reduction, transition timing
 - [ ] Weapon-driven movement modifiers (ADS slow, sprint-out delay before firing)
 - [ ] Placeholder cube-with-a-barrel viewmodel; muzzle flash, tracers, impact decals

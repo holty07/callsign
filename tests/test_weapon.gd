@@ -55,3 +55,28 @@ func test_movement_spread_fraction_clamps_at_one_past_max_speed() -> void:
 
 func test_movement_spread_fraction_is_zero_when_max_speed_is_zero() -> void:
 	assert_float(Hitscan.movement_spread_fraction(5.0, 0.0)).is_equal(0.0)
+
+
+func test_recoil_vertical_climb_caps_at_max() -> void:
+	var recoil := Recoil.new(1.0, 3.0, 0.0, 0.0, 42)
+	for _i in range(10):
+		recoil.fire()
+	var offset := recoil.process(0.0)
+	assert_float(offset.x).is_equal(3.0)
+
+
+func test_recoil_recovers_toward_zero_over_time() -> void:
+	var recoil := Recoil.new(1.0, 3.0, 0.0, 10.0, 42)
+	recoil.fire()
+	recoil.process(0.0) # register the shot's kick
+	var offset := recoil.process(10.0) # far longer than needed to fully recover
+	assert_vector(offset).is_equal(Vector2.ZERO)
+
+
+func test_recoil_horizontal_drift_is_deterministic_for_a_given_seed() -> void:
+	var a := Recoil.new(1.0, 10.0, 2.0, 0.0, 99)
+	var b := Recoil.new(1.0, 10.0, 2.0, 0.0, 99)
+	for _i in range(5):
+		a.fire()
+		b.fire()
+	assert_vector(a.process(0.0)).is_equal(b.process(0.0))
