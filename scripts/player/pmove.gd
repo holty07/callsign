@@ -18,7 +18,7 @@ class_name PMove
 @export_group("Ground")
 @export var move_speed: float = 320.0
 @export var ground_accel: float = 10.0
-@export var ground_friction: float = 6.0
+@export var ground_friction: float = 10.0
 @export var stop_speed: float = 200.0
 
 @export_group("Air")
