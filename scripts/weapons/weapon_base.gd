@@ -45,6 +45,13 @@ signal ammo_changed(magazine_ammo: int, reserve_ammo: int)
 @export_group("Sprint-out")
 @export var sprint_out_delay: float = 0.25
 
+@export_group("Reload")
+## No reload viewmodel yet — as a placeholder, the whole weapon just slides
+## off screen by this local offset for the duration of the reload and slides
+## back once it's done. Replace with a real reload animation later.
+@export var reload_offscreen_offset: Vector3 = Vector3(0.0, -0.6, 0.15)
+@export var reload_move_speed: float = 3.0
+
 @onready var _muzzle: Node3D = $Muzzle
 
 var _player: PMove
@@ -63,6 +70,7 @@ var _ads_blend: float = 0.0 # 0 = hip, 1 = fully ADS
 var _recoil: Recoil
 var _shot_rng := RandomNumberGenerator.new()
 var _reload_timer: Timer
+var _rest_position: Vector3
 
 
 func _ready() -> void:
@@ -70,6 +78,7 @@ func _ready() -> void:
 	_reserve_ammo = reserve_ammo_max
 	_recoil = Recoil.new(recoil_vertical_per_shot_deg, recoil_vertical_max_deg, recoil_horizontal_max_deg, recoil_recovery_deg_per_sec, recoil_seed)
 	_shot_rng.seed = recoil_seed + 1 # distinct stream from recoil's own RNG
+	_rest_position = position
 
 	_player = _find_ancestor(PMove)
 	_camera = get_parent() as Camera3D
@@ -91,6 +100,7 @@ func _physics_process(delta: float) -> void:
 	_fire_cooldown = maxf(_fire_cooldown - delta, 0.0)
 	_update_sprint_out_timer(delta)
 	_update_ads(delta)
+	_update_reload_offset(delta)
 
 	if Input.is_action_just_pressed("reload"):
 		reload()
@@ -206,6 +216,11 @@ func _update_ads(delta: float) -> void:
 		_camera.fov = lerpf(_default_fov, ads_fov_degrees, _ads_blend)
 	if _player:
 		_player.speed_modifier = lerpf(1.0, ads_speed_scale, _ads_blend)
+
+
+func _update_reload_offset(delta: float) -> void:
+	var target := _rest_position + reload_offscreen_offset if _is_reloading else _rest_position
+	position = position.move_toward(target, reload_move_speed * delta)
 
 
 func _find_ancestor(of_type) -> Node:

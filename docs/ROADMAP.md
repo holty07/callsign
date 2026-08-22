@@ -56,7 +56,7 @@ One rifle done properly beats three done badly. Build the base system, ship one 
 - [x] Recoil: deterministic vertical climb + seeded horizontal drift, with recovery
 - [x] ADS: FOV shift, movement speed scalar, spread reduction, transition timing
 - [x] Weapon-driven movement modifiers (ADS slow, sprint-out delay before firing)
-- [ ] Placeholder cube-with-a-barrel viewmodel; muzzle flash, tracers, impact decals
+- [x] Placeholder cube-with-a-barrel viewmodel; muzzle flash, tracers, impact decals
 - [x] Damage/health system with a dummy target that reports hits
 
 **Done when:** shooting the dummy feels responsive and the recoil pattern is learnable.
