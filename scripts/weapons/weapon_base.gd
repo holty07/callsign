@@ -6,6 +6,7 @@ signal fired()
 signal reload_started()
 signal reloaded()
 signal ammo_changed(magazine_ammo: int, reserve_ammo: int)
+signal hit_confirmed(was_headshot: bool, was_kill: bool)
 
 @export_group("Firing")
 @export var fire_rate_rpm: float = 700.0
@@ -156,7 +157,12 @@ func fire() -> void:
 		var distance := origin.distance_to(hit.position)
 		var damage := Hitscan.damage_at_distance(distance, damage_near, damage_far, falloff_start, falloff_end)
 		damage = Hitscan.apply_headshot_multiplier(damage, collider.is_head, headshot_multiplier)
-		collider.get_target_health().apply_damage(damage, collider.is_head, hit.position)
+
+		var health: Health = collider.get_target_health()
+		var was_alive: bool = health.current_health > 0.0
+		health.apply_damage(damage, collider.is_head, hit.position)
+		if was_alive:
+			hit_confirmed.emit(collider.is_head, health.current_health <= 0.0)
 
 
 ## Current spread cone half-angle, in radians: hipfire spread widened by the

@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/pmove.gd" id="1_pmove"]
 [ext_resource type="Script" path="res://scripts/player/camera_look.gd" id="2_camlook"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/rifle.tscn" id="3_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="4_crosshair"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -25,3 +26,7 @@ current = true
 fov = 90.0
 
 [node name="Rifle" parent="Head/Camera3D" instance=ExtResource("3_rifle")]
+
+[node name="Crosshair" parent="." instance=ExtResource("4_crosshair")]
+weapon_path = NodePath("../Head/Camera3D/Rifle")
+camera_path = NodePath("../Head/Camera3D")
