@@ -47,6 +47,11 @@ class_name PMove
 
 var _velocity_qu: Vector3 = Vector3.ZERO
 var _current_height: float = standing_height
+var _was_sprinting: bool = false
+
+## Runtime multiplier on move_speed, e.g. for weapon ADS slow. Not exported —
+## this is a live hook other systems poke, not a tuning value.
+var speed_modifier: float = 1.0
 
 ## Q3 bg_pmove.c PM_Friction, ported. `vel` is a full 3D velocity (Quake Z-up
 ## became Godot Y-up: the vertical axis is `y`, not `z`). `grounded` mirrors
@@ -144,16 +149,24 @@ func _wish_velocity() -> Dictionary:
 		wishdir = wishdir.normalized()
 
 	var speed_scale := 1.0
+	_was_sprinting = false
 	if _is_crouched():
 		speed_scale = crouch_speed_scale
 	elif Input.is_action_pressed("sprint") and input.y > 0.1:
 		speed_scale = sprint_speed_scale
+		_was_sprinting = true
 
-	return {"dir": wishdir, "speed": move_speed * input_len * speed_scale}
+	return {"dir": wishdir, "speed": move_speed * input_len * speed_scale * speed_modifier}
 
 
 func _is_crouched() -> bool:
 	return Input.is_action_pressed("crouch")
+
+
+## Whether the last physics tick's wish velocity was sprint-scaled. Weapons
+## use this to gate a brief sprint-out delay before firing.
+func is_sprinting() -> bool:
+	return _was_sprinting
 
 
 func _handle_crouch(delta: float) -> void:
