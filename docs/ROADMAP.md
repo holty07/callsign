@@ -52,7 +52,7 @@ Spend real time here. Record your final values in `docs/TUNING.md` with notes on
 One rifle done properly beats three done badly. Build the base system, ship one gun.
 
 - [ ] `WeaponBase` — fire rate, magazine, reserve ammo, reload, hipfire spread cone
-- [ ] Hitscan with per-shot spread, damage falloff by distance, headshot multiplier
+- [x] Hitscan with per-shot spread, damage falloff by distance, headshot multiplier
 - [ ] Recoil: deterministic vertical climb + seeded horizontal drift, with recovery
 - [ ] ADS: FOV shift, movement speed scalar, spread reduction, transition timing
 - [ ] Weapon-driven movement modifiers (ADS slow, sprint-out delay before firing)
