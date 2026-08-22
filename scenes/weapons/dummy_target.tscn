@@ -1,0 +1,58 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/dummy_target.gd" id="1_dummy"]
+[ext_resource type="Script" path="res://scripts/weapons/health.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/weapons/hit_zone.gd" id="3_hitzone"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_torso"]
+radius = 0.25
+height = 1.2
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_torso"]
+radius = 0.25
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_torso"]
+albedo_color = Color(0.6, 0.6, 0.6, 1)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_head"]
+radius = 0.15
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.15
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_head"]
+albedo_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="DummyTarget" type="Node3D"]
+script = ExtResource("1_dummy")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 100.0
+
+[node name="TorsoBody" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+script = ExtResource("3_hitzone")
+is_head = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TorsoBody"]
+shape = SubResource("CapsuleShape3D_torso")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="TorsoBody"]
+mesh = SubResource("CapsuleMesh_torso")
+material_override = SubResource("StandardMaterial3D_torso")
+
+[node name="HeadBody" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+script = ExtResource("3_hitzone")
+is_head = true
+health_path = NodePath("../Health")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HeadBody"]
+shape = SubResource("SphereShape3D_head")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="HeadBody"]
+mesh = SubResource("SphereMesh_head")
+material_override = SubResource("StandardMaterial3D_head")

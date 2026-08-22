@@ -57,7 +57,7 @@ One rifle done properly beats three done badly. Build the base system, ship one 
 - [ ] ADS: FOV shift, movement speed scalar, spread reduction, transition timing
 - [ ] Weapon-driven movement modifiers (ADS slow, sprint-out delay before firing)
 - [ ] Placeholder cube-with-a-barrel viewmodel; muzzle flash, tracers, impact decals
-- [ ] Damage/health system with a dummy target that reports hits
+- [x] Damage/health system with a dummy target that reports hits
 
 **Done when:** shooting the dummy feels responsive and the recoil pattern is learnable.
 

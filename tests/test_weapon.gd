@@ -80,3 +80,32 @@ func test_recoil_horizontal_drift_is_deterministic_for_a_given_seed() -> void:
 		a.fire()
 		b.fire()
 	assert_vector(a.process(0.0)).is_equal(b.process(0.0))
+
+
+func test_health_reports_damage_and_death() -> void:
+	var health := Health.new()
+	health.max_health = 100.0
+	health._ready()
+
+	# Plain locals aren't mutable from inside a lambda closure in GDScript —
+	# only what's inside a captured Array/Dictionary/Object actually persists.
+	var damage_events := []
+	health.damaged.connect(func(amount, was_headshot, _pos): damage_events.append([amount, was_headshot]))
+	var died_flag := [false]
+	health.died.connect(func(): died_flag[0] = true)
+
+	health.apply_damage(40.0, false)
+	assert_float(health.current_health).is_equal(60.0)
+	assert_bool(died_flag[0]).is_false()
+
+	health.apply_damage(60.0, true)
+	assert_float(health.current_health).is_equal(0.0)
+	assert_bool(died_flag[0]).is_true()
+	assert_int(damage_events.size()).is_equal(2)
+	assert_bool(damage_events[1][1]).is_true()
+
+	health.apply_damage(10.0) # already dead; must not go negative or re-fire signals
+	assert_float(health.current_health).is_equal(0.0)
+	assert_int(damage_events.size()).is_equal(2)
+
+	health.free()
