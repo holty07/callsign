@@ -16,7 +16,7 @@ class_name PMove
 # physics, in _physics_process.
 
 @export_group("Ground")
-@export var move_speed: float = 320.0
+@export var move_speed: float = 260.0
 @export var ground_accel: float = 10.0
 @export var ground_friction: float = 10.0
 @export var stop_speed: float = 200.0
@@ -36,7 +36,18 @@ class_name PMove
 @export var eye_offset_from_top: float = 0.15
 
 @export_group("Sprint")
-@export var sprint_speed_scale: float = 1.6
+@export var sprint_speed_scale: float = 1.4
+
+@export_group("Slide")
+## Sprinting into a crouch triggers a slide instead of an ordinary crouch:
+## a forward speed boost, low friction while it lasts, and a cooldown
+## before it can trigger again. Ends early if crouch is released, the
+## timer runs out, or the ground drops out from under you.
+@export var slide_min_speed: float = 300.0
+@export var slide_duration: float = 0.65
+@export var slide_speed_boost: float = 1.15
+@export var slide_friction: float = 2.0
+@export var slide_cooldown: float = 0.8
 
 @export_group("Stepping & slopes")
 @export var max_step_height: float = 0.3
@@ -48,6 +59,9 @@ class_name PMove
 var _velocity_qu: Vector3 = Vector3.ZERO
 var _current_height: float = standing_height
 var _was_sprinting: bool = false
+var _is_sliding: bool = false
+var _slide_timer: float = 0.0
+var _slide_cooldown_timer: float = 0.0
 
 ## Runtime multiplier on move_speed, e.g. for weapon ADS slow. Not exported —
 ## this is a live hook other systems poke, not a tuning value.
@@ -91,6 +105,30 @@ static func pm_accelerate(vel: Vector3, wishdir: Vector3, wishspeed: float, acce
 	return vel + wishdir * accel_speed
 
 
+## Whether a sprint-to-crouch slide should begin this tick. Gated on being
+## grounded, the crouch press being the one that starts it (not a held
+## repeat), having been sprinting going into this tick, having enough
+## horizontal speed to bother, and the cooldown from the last slide.
+static func should_start_slide(grounded: bool, crouch_just_pressed: bool, was_sprinting: bool, horizontal_speed: float, min_speed: float, cooldown_remaining: float) -> bool:
+	if not grounded or not crouch_just_pressed or not was_sprinting:
+		return false
+	if cooldown_remaining > 0.0:
+		return false
+	return horizontal_speed >= min_speed
+
+
+## Whether an in-progress slide should end this tick: losing the floor,
+## releasing crouch, or the duration timer running out.
+static func should_end_slide(grounded: bool, crouch_held: bool, time_remaining: float) -> bool:
+	return not grounded or not crouch_held or time_remaining <= 0.0
+
+
+## The forward lurch a slide starts with: boosts horizontal speed only,
+## vertical velocity (e.g. a fall already in progress) passes through.
+static func slide_boost_velocity(vel: Vector3, boost: float) -> Vector3:
+	return Vector3(vel.x * boost, vel.y, vel.z * boost)
+
+
 func _ready() -> void:
 	_current_height = standing_height
 	_apply_height(_current_height)
@@ -99,21 +137,28 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	floor_max_angle = deg_to_rad(floor_max_angle_deg)
 
+	var grounded := is_on_floor()
+
+	_update_slide(delta, grounded)
 	_handle_crouch(delta)
 
-	var grounded := is_on_floor()
 	var wish := _wish_velocity()
 
 	if grounded and Input.is_action_just_pressed("jump"):
 		_velocity_qu.y = jump_velocity_qu
 		grounded = false
+		_end_slide()
 
-	_velocity_qu = pm_friction(_velocity_qu, ground_friction, stop_speed, delta, grounded)
+	var friction := slide_friction if _is_sliding else ground_friction
+	_velocity_qu = pm_friction(_velocity_qu, friction, stop_speed, delta, grounded)
 
-	if grounded:
-		_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, ground_accel, delta)
-	else:
-		_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, air_accel, delta)
+	if not _is_sliding:
+		if grounded:
+			_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, ground_accel, delta)
+		else:
+			_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, air_accel, delta)
+
+	if not grounded:
 		_velocity_qu.y -= gravity_qu * delta
 
 	velocity = _velocity_qu * Units.QU_TO_M
@@ -161,6 +206,33 @@ func _wish_velocity() -> Dictionary:
 
 func _is_crouched() -> bool:
 	return Input.is_action_pressed("crouch")
+
+
+func _update_slide(delta: float, grounded: bool) -> void:
+	_slide_cooldown_timer = maxf(_slide_cooldown_timer - delta, 0.0)
+
+	if _is_sliding:
+		_slide_timer -= delta
+		if should_end_slide(grounded, _is_crouched(), _slide_timer):
+			_end_slide()
+		return
+
+	var horizontal_speed := Vector2(_velocity_qu.x, _velocity_qu.z).length()
+	if should_start_slide(grounded, Input.is_action_just_pressed("crouch"), _was_sprinting, horizontal_speed, slide_min_speed, _slide_cooldown_timer):
+		_start_slide()
+
+
+func _start_slide() -> void:
+	_is_sliding = true
+	_slide_timer = slide_duration
+	_velocity_qu = slide_boost_velocity(_velocity_qu, slide_speed_boost)
+
+
+func _end_slide() -> void:
+	if _is_sliding:
+		_slide_cooldown_timer = slide_cooldown
+	_is_sliding = false
+	_slide_timer = 0.0
 
 
 ## Whether the last physics tick's wish velocity was sprint-scaled. Weapons

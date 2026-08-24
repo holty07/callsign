@@ -23,6 +23,11 @@ const _PLAYER_FIELDS: Array[Dictionary] = [
 	{"prop": "crouch_speed_scale", "label": "Crouch speed scale", "min": 0.0, "max": 1.5, "step": 0.01},
 	{"prop": "crouch_transition_speed", "label": "Crouch transition speed", "min": 1.0, "max": 20.0, "step": 0.1},
 	{"prop": "sprint_speed_scale", "label": "Sprint speed scale", "min": 1.0, "max": 3.0, "step": 0.01},
+	{"prop": "slide_min_speed", "label": "Slide min speed (qu/s)", "min": 0.0, "max": 500.0, "step": 5.0},
+	{"prop": "slide_duration", "label": "Slide duration (s)", "min": 0.1, "max": 2.0, "step": 0.05},
+	{"prop": "slide_speed_boost", "label": "Slide speed boost", "min": 1.0, "max": 2.0, "step": 0.01},
+	{"prop": "slide_friction", "label": "Slide friction", "min": 0.0, "max": 20.0, "step": 0.1},
+	{"prop": "slide_cooldown", "label": "Slide cooldown (s)", "min": 0.0, "max": 3.0, "step": 0.05},
 	{"prop": "max_step_height", "label": "Max step height (m)", "min": 0.0, "max": 1.0, "step": 0.01},
 	{"prop": "floor_max_angle_deg", "label": "Floor max angle (deg)", "min": 0.0, "max": 89.0, "step": 1.0},
 ]
