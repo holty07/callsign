@@ -34,6 +34,14 @@ const _PLAYER_FIELDS: Array[Dictionary] = [
 
 const _CAMERA_FIELDS: Array[Dictionary] = [
 	{"prop": "mouse_sensitivity", "label": "Mouse sensitivity", "min": 0.0002, "max": 0.02, "step": 0.0001},
+	{"prop": "bob_cycle_length_qu", "label": "Bob cycle length (qu)", "min": 20.0, "max": 300.0, "step": 1.0},
+	{"prop": "bob_vertical_amplitude_m", "label": "Bob vertical amplitude (m)", "min": 0.0, "max": 0.2, "step": 0.001},
+	{"prop": "bob_side_amplitude_m", "label": "Bob side amplitude (m)", "min": 0.0, "max": 0.2, "step": 0.001},
+	{"prop": "bob_min_speed_qu", "label": "Bob min speed (qu/s)", "min": 0.0, "max": 200.0, "step": 1.0},
+	{"prop": "bob_max_speed_qu", "label": "Bob max speed (qu/s)", "min": 50.0, "max": 500.0, "step": 5.0},
+	{"prop": "bob_amplitude_smoothing", "label": "Bob amplitude smoothing", "min": 1.0, "max": 30.0, "step": 0.5},
+	{"prop": "slide_tilt_deg", "label": "Slide tilt (deg)", "min": 0.0, "max": 20.0, "step": 0.5},
+	{"prop": "slide_tilt_speed_deg", "label": "Slide tilt speed (deg/s)", "min": 10.0, "max": 300.0, "step": 5.0},
 ]
 
 @onready var _rows: VBoxContainer = $Panel/ScrollContainer/VBox

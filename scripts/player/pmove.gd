@@ -241,6 +241,19 @@ func is_sprinting() -> bool:
 	return _was_sprinting
 
 
+## Whether a slide is currently in progress. camera_look.gd uses this to
+## drive the slide tilt that's the player's only feedback that a slide
+## (as opposed to an ordinary crouch) is happening.
+func is_sliding() -> bool:
+	return _is_sliding
+
+
+## Current horizontal speed in qu/s, ignoring vertical velocity. camera_look.gd
+## uses this to drive view bob amplitude and cadence.
+func get_horizontal_speed_qu() -> float:
+	return Vector2(_velocity_qu.x, _velocity_qu.z).length()
+
+
 func _handle_crouch(delta: float) -> void:
 	var target_height := crouch_height if _is_crouched() else standing_height
 

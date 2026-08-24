@@ -10,8 +10,9 @@ values must respect.
 ## Movement
 
 All values live as exported variables on `scripts/player/pmove.gd` (and
-`camera_look.gd` for sensitivity) — this is a record of what's in play, not
-the source of truth; if this ever drifts from the scene, the scene wins.
+`camera_look.gd` for sensitivity, view bob, and slide tilt) — this is a
+record of what's in play, not the source of truth; if this ever drifts from
+the scene, the scene wins.
 
 Playtested 2026-08-21 on the M1 greybox (`scenes/maps/test_box.tscn`).
 
@@ -37,6 +38,14 @@ Playtested 2026-08-21 on the M1 greybox (`scenes/maps/test_box.tscn`).
 | `max_step_height` | 0.3 m | First-pass stair-climb height; not yet stress-tested against the greybox stairs specifically. |
 | `floor_max_angle_deg` | 45° | Godot's own default slope limit; unchanged. |
 | `mouse_sensitivity` | 0.0025 | Personal preference, not a movement-feel value. |
+| `bob_cycle_length_qu` | 130 qu | New: view bob. Phase advances with distance travelled rather than wall-clock time, so cadence tracks footwork and speeds up under sprint automatically. First pass, needs playtest. |
+| `bob_vertical_amplitude_m` | **0.1** m | New: view bob, vertical component. First value (0.02 m) read as no bob at all on playtest — too small to notice against normal running motion. 0.05 m was tried next, still felt weak; confirmed at 0.1 m by playtest. |
+| `bob_side_amplitude_m` | **0.1** m | New: view bob, side-to-side sway at half the vertical frequency. Raised alongside `bob_vertical_amplitude_m` to the same 0.1 m value; confirmed by playtest. |
+| `bob_min_speed_qu` | 20 qu/s | New: below this horizontal speed, bob amplitude eases to zero so a barely-moving player doesn't visibly bob. First pass, needs playtest. |
+| `bob_max_speed_qu` | 380 qu/s | New: horizontal speed at which bob reaches full amplitude — just above sprint top speed (≈364 qu/s), so sprinting reads as the strongest bob. First pass, needs playtest. |
+| `bob_amplitude_smoothing` | 8 | New: eases bob amplitude toward its target rather than snapping, so starting/stopping doesn't pop. First pass, needs playtest. |
+| `slide_tilt_deg` | 8° | New: camera roll while sliding — the player's only feedback that a slide (as opposed to an ordinary crouch) is in progress. First pass, needs playtest. |
+| `slide_tilt_speed_deg` | 90°/s | New: how fast the slide tilt eases in and back out. First pass, needs playtest. |
 
 **On the Phantom Forces reference:** community sources (Roblox DevForum threads, wiki/guide pages, and player comparisons to CS2) were sparse on hard numbers — no published sprint multiplier, ADS-slow percentage, or jump/gravity values could be sourced. What is well-supported is the *character* of the movement: momentum-retaining with working air-strafe/bunnyhop tech (not a CoD-style instant stop), no stamina bar (sprint is unlimited), and an official slide/dive move gated by a cooldown rather than a resource. The values above chase that character, not exact numbers — they're first-pass and need playtesting like every other entry in this table.
 
