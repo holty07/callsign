@@ -51,4 +51,18 @@ Playtested 2026-08-21 on the M1 greybox (`scenes/maps/test_box.tscn`).
 
 ## Weapons
 
-_Populated in M2._
+Firing, spread, damage, recoil, and ADS values from M2 aren't logged here yet —
+still to be backfilled. Weapon sway (M1/M2 polish, added alongside view bob) is
+recorded below; it lives as exported variables on `scripts/weapons/weapon_base.gd`,
+sharing its bob math with `camera_look.gd`'s view bob via `scripts/core/view_bob.gd`
+so the gun reads as following the same footstep as the camera, not wobbling on
+its own.
+
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `sway_cycle_length_qu` | 130 qu | New: matches `bob_cycle_length_qu` so the gun's cadence lines up with the camera's. First pass, needs playtest. |
+| `sway_vertical_amplitude_m` | 0.015 m | New. Kept below the camera's view bob amplitude — the gun should read as trailing the camera's motion, not matching it 1:1. First pass, needs playtest. |
+| `sway_side_amplitude_m` | 0.025 m | New. First pass, needs playtest. |
+| `sway_min_speed_qu` | 20 qu/s | New: matches `bob_min_speed_qu`. First pass, needs playtest. |
+| `sway_max_speed_qu` | 380 qu/s | New: matches `bob_max_speed_qu`. First pass, needs playtest. |
+| `sway_amplitude_smoothing` | 8 | New: matches `bob_amplitude_smoothing`. First pass, needs playtest. |

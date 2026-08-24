@@ -53,6 +53,18 @@ signal hit_confirmed(was_headshot: bool, was_kill: bool)
 @export var reload_offscreen_offset: Vector3 = Vector3(0.0, -0.6, 0.15)
 @export var reload_move_speed: float = 3.0
 
+@export_group("Sway")
+## Weapon sway on movement, using the same distance-travelled bob math as
+## camera_look.gd's view bob (scripts/core/view_bob.gd) so the gun reads as
+## following the same footstep rather than wobbling on its own.
+@export var sway_enabled: bool = true
+@export var sway_cycle_length_qu: float = 130.0
+@export var sway_vertical_amplitude_m: float = 0.015
+@export var sway_side_amplitude_m: float = 0.025
+@export var sway_min_speed_qu: float = 20.0
+@export var sway_max_speed_qu: float = 380.0
+@export var sway_amplitude_smoothing: float = 8.0
+
 @onready var _muzzle: Node3D = $Muzzle
 
 var _player: PMove
@@ -72,6 +84,12 @@ var _recoil: Recoil
 var _shot_rng := RandomNumberGenerator.new()
 var _reload_timer: Timer
 var _rest_position: Vector3
+## The reload offset eased on top of _rest_position, before sway is added.
+## Sway writes the final `position` each tick from this plus its own offset,
+## so the two never fight over the same node property.
+var _base_position: Vector3
+var _sway_phase: float = 0.0
+var _sway_amplitude_scale: float = 0.0
 
 
 func _ready() -> void:
@@ -80,6 +98,7 @@ func _ready() -> void:
 	_recoil = Recoil.new(recoil_vertical_per_shot_deg, recoil_vertical_max_deg, recoil_horizontal_max_deg, recoil_recovery_deg_per_sec, recoil_seed)
 	_shot_rng.seed = recoil_seed + 1 # distinct stream from recoil's own RNG
 	_rest_position = position
+	_base_position = position
 
 	_player = _find_ancestor(PMove)
 	_camera = get_parent() as Camera3D
@@ -102,6 +121,7 @@ func _physics_process(delta: float) -> void:
 	_update_sprint_out_timer(delta)
 	_update_ads(delta)
 	_update_reload_offset(delta)
+	_update_sway(delta)
 
 	if Input.is_action_just_pressed("reload"):
 		reload()
@@ -226,7 +246,24 @@ func _update_ads(delta: float) -> void:
 
 func _update_reload_offset(delta: float) -> void:
 	var target := _rest_position + reload_offscreen_offset if _is_reloading else _rest_position
-	position = position.move_toward(target, reload_move_speed * delta)
+	_base_position = _base_position.move_toward(target, reload_move_speed * delta)
+
+
+func _update_sway(delta: float) -> void:
+	var horizontal_speed := 0.0
+	var grounded := true
+	if _player:
+		horizontal_speed = _player.get_horizontal_speed_qu()
+		grounded = _player.is_on_floor()
+
+	var target_scale := 0.0
+	if sway_enabled and grounded:
+		_sway_phase = ViewBob.advance_phase(_sway_phase, horizontal_speed, sway_cycle_length_qu, delta)
+		target_scale = ViewBob.amplitude_scale(horizontal_speed, sway_min_speed_qu, sway_max_speed_qu)
+
+	_sway_amplitude_scale = move_toward(_sway_amplitude_scale, target_scale, sway_amplitude_smoothing * delta)
+	var sway_offset := ViewBob.offset(_sway_phase, sway_vertical_amplitude_m, sway_side_amplitude_m) * _sway_amplitude_scale
+	position = _base_position + sway_offset
 
 
 func _find_ancestor(of_type) -> Node:
