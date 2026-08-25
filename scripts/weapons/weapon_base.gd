@@ -190,6 +190,11 @@ func fire() -> void:
 	var space_state := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(origin, end_point)
 	query.exclude = [_player.get_rid()] if _player else []
+	# Without this, the default "check every layer" mask hits a target's own
+	# CHARACTER_BODY capsule before the ray ever reaches the smaller HitZone
+	# shapes nested inside it — registering as a hit that isn't a HitZone,
+	# so no damage ever applies. See scripts/core/collision_layers.gd.
+	query.collision_mask = CollisionLayers.WEAPON_RAYCAST_MASK
 	var hit := space_state.intersect_ray(query)
 
 	var muzzle_origin := _muzzle.global_position
