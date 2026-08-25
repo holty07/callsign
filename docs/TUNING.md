@@ -66,3 +66,22 @@ its own.
 | `sway_min_speed_qu` | 20 qu/s | New: matches `bob_min_speed_qu`. First pass, needs playtest. |
 | `sway_max_speed_qu` | 380 qu/s | New: matches `bob_max_speed_qu`. First pass, needs playtest. |
 | `sway_amplitude_smoothing` | 8 | New: matches `bob_amplitude_smoothing`. First pass, needs playtest. |
+
+## Bots
+
+Difficulty tiers (`scripts/bots/bot_difficulty.gd`, presets in `scenes/bots/difficulty_*.tres`)
+are the only place bot skill is tuned — per the roadmap, driven by reaction delay, aim error,
+and spread, never health or damage. `Bot.apply_difficulty()` pushes a tier's values onto that
+bot's own `Perception`/`BotAim`/`WeaponBase` instances only; every other actor is untouched.
+
+| Tier | `reaction_delay` | `memory_duration` | `fov_deg` | `error_cone_deg` | `turn_rate_deg` | `hipfire_spread_deg` |
+| --- | --- | --- | --- | --- | --- | --- |
+| Easy | 0.6 s | 3.0 s | 90° | 6.0° | 140°/s | 5.0° |
+| Normal | 0.25 s | 5.0 s | 100° | 3.0° | 220°/s | 3.0° |
+| Hard | 0.1 s | 8.0 s | 110° | 1.0° | 320°/s | 1.5° |
+
+First pass, not yet playtested — Normal matches the values `Perception`/`BotAim`/`WeaponBase`
+already shipped with in earlier M3 commits; Easy and Hard are symmetric first-guess spreads
+around it, not derived from anything. All other bot values (Perception's view_distance,
+BotAim's burst/reacquisition timing, WeaponBase's damage/recoil/fire rate) are shared across
+tiers — only the six columns above vary.

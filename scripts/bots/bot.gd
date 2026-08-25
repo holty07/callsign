@@ -44,6 +44,19 @@ func is_alive() -> bool:
 	return health.current_health > 0.0
 
 
+## Pushes a difficulty tier's perception/aim/weapon values onto this bot.
+## Deliberately never touches health/max_health or damage — difficulty is
+## how well the bot perceives and aims, not how much punishment it takes
+## or deals.
+func apply_difficulty(profile: BotDifficulty) -> void:
+	perception.fov_deg = profile.fov_deg
+	perception.reaction_delay = profile.reaction_delay
+	perception.memory_duration = profile.memory_duration
+	aim.error_cone_deg = profile.error_cone_deg
+	aim.turn_rate_deg = profile.turn_rate_deg
+	weapon.hipfire_spread_deg = profile.hipfire_spread_deg
+
+
 ## Resets health and teleports back to a spawn point. Leaves perception's
 ## own memory of this bot in other bots' heads to expire naturally rather
 ## than forcibly clearing it — reappearing somewhere else and having to be
