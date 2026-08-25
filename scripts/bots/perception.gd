@@ -27,9 +27,39 @@ var _time_since_seen: Dictionary = {} # target -> seconds since last confirmed v
 var _last_known_position: Dictionary = {} # target -> Vector3
 var _confirmed_target: Node3D = null
 
+var _has_noise_memory: bool = false
+var _noise_position: Vector3 = Vector3.ZERO
+
 
 func _ready() -> void:
 	_actor = get_parent()
+	NoiseBus.noise_emitted.connect(_on_noise_emitted)
+
+
+## A heard-but-unseen alert (e.g. gunfire) — investigate-noise behaviour
+## reads this independently of the per-target sighting memory above, since
+## a noise isn't tied to any specific confirmed target.
+func has_noise_memory() -> bool:
+	return _has_noise_memory
+
+
+func get_noise_position() -> Vector3:
+	return _noise_position
+
+
+## Called once investigate-noise behaviour has resolved the alert (arrived
+## and found nothing, or gave up), so the same noise doesn't keep re-firing
+## the behaviour every tick.
+func clear_noise_memory() -> void:
+	_has_noise_memory = false
+
+
+func _on_noise_emitted(position: Vector3, radius: float, source: Node) -> void:
+	if source == _actor:
+		return
+	if _eye.global_position.distance_to(position) <= radius:
+		_has_noise_memory = true
+		_noise_position = position
 
 
 ## Whether `to_target` falls inside a forward-facing cone of half-angle
@@ -56,6 +86,10 @@ static func should_forget(time_since_seen: float, memory_duration: float) -> boo
 
 
 func _physics_process(delta: float) -> void:
+	if _is_dead(_actor):
+		_confirmed_target = null
+		return
+
 	var best_target: Node3D = null
 	var best_distance := INF
 
@@ -100,6 +134,13 @@ func _physics_process(delta: float) -> void:
 ## than one), or null if nothing currently qualifies.
 func get_confirmed_target() -> Node3D:
 	return _confirmed_target
+
+
+## Whether this bot has any reason at all to think a threat is nearby —
+## seeing one now, remembering where one was, or having heard one. Used to
+## gate retreat/take-cover so a bot doesn't flee from nothing.
+func is_aware_of_threat() -> bool:
+	return _confirmed_target != null or has_any_memory() or _has_noise_memory
 
 
 func has_memory_of(target: Node3D) -> bool:

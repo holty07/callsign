@@ -31,6 +31,11 @@ signal hit_confirmed(was_headshot: bool, was_kill: bool)
 @export var headshot_multiplier: float = 2.0
 @export var max_range: float = 200.0
 
+@export_group("Noise")
+## Gunfire is loud: every shot reports itself to NoiseBus so bots within
+## this radius can react to it even without a direct line of sight.
+@export var gunfire_alert_radius: float = 30.0
+
 @export_group("Recoil")
 @export var recoil_vertical_per_shot_deg: float = 0.6
 @export var recoil_vertical_max_deg: float = 4.0
@@ -175,6 +180,7 @@ func fire() -> void:
 	_recoil.fire()
 	fired.emit()
 	ammo_changed.emit(_magazine_ammo, _reserve_ammo)
+	NoiseBus.notify(_camera.global_position, gunfire_alert_radius, _owner_actor())
 
 	var origin := _camera.global_position
 	var forward := -_camera.global_transform.basis.z
@@ -295,6 +301,21 @@ func _find_ancestor(of_type) -> Node:
 	var node := get_parent()
 	while node:
 		if is_instance_of(node, of_type):
+			return node
+		node = node.get_parent()
+	return null
+
+
+## The player or bot this weapon belongs to, for identifying "who fired
+## this shot" to systems like NoiseBus. _player only resolves for the
+## player's own rifle (see _find_ancestor(PMove) above); this falls back to
+## walking up to the nearest "combatants" member, which covers bots too.
+func _owner_actor() -> Node:
+	if _player:
+		return _player
+	var node := get_parent()
+	while node:
+		if node.is_in_group("combatants"):
 			return node
 		node = node.get_parent()
 	return null

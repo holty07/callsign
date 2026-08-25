@@ -71,7 +71,7 @@ The headline feature. This is the biggest single chunk of work in the project.
 - [x] Beehave behaviour trees under `addons/`
 - [x] Perception: FOV cone + raycast line-of-sight, with reaction delay and a memory
       of last-known position so bots don't have omniscient tracking
-- [ ] Behaviours: patrol, investigate noise, engage, take cover, reposition, retreat
+- [x] Behaviours: patrol, investigate noise, engage, take cover, reposition, retreat
       at low health, respawn
 - [x] Aim model: turn rate limit, error cone, burst discipline, target reacquisition
 - [ ] Difficulty tiers driven by reaction delay / aim error / spread, not health cheats

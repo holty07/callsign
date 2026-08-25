@@ -18,6 +18,9 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 [autoload]
 
 InputConfig="*res://scripts/core/input_config.gd"
+NoiseBus="*res://scripts/bots/noise_bus.gd"
+BeehaveGlobalMetrics="*res://addons/beehave/metrics/beehave_global_metrics.gd"
+BeehaveGlobalDebugger="*res://addons/beehave/debug/global_debugger.gd"
 
 [editor_plugins]
 

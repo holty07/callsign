@@ -17,6 +17,10 @@ extends CharacterBody3D
 @export var arrival_distance: float = 0.3
 
 @onready var _nav_agent: NavigationAgent3D = $NavigationAgent3D
+@onready var health: Health = $Health
+@onready var perception: Perception = $Perception
+@onready var weapon: WeaponBase = $Head/Camera3D/Rifle
+@onready var aim: BotAim = $Head
 
 
 func _ready() -> void:
@@ -34,6 +38,21 @@ func stop_moving() -> void:
 
 func is_move_finished() -> bool:
 	return _nav_agent.is_navigation_finished()
+
+
+func is_alive() -> bool:
+	return health.current_health > 0.0
+
+
+## Resets health and teleports back to a spawn point. Leaves perception's
+## own memory of this bot in other bots' heads to expire naturally rather
+## than forcibly clearing it — reappearing somewhere else and having to be
+## re-spotted is the point.
+func respawn_at(spawn_position: Vector3) -> void:
+	health.reset()
+	velocity = Vector3.ZERO
+	global_position = spawn_position
+	stop_moving()
 
 
 func _physics_process(delta: float) -> void:

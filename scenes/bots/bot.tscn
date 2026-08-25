@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/bots/bot.gd" id="1_bot"]
 [ext_resource type="Script" path="res://scripts/weapons/health.gd" id="2_health"]
@@ -6,6 +6,15 @@
 [ext_resource type="Script" path="res://scripts/bots/perception.gd" id="4_perception"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/rifle.tscn" id="5_rifle"]
 [ext_resource type="Script" path="res://scripts/bots/aim.gd" id="6_aim"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_respawn.gd" id="7_respawn"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_retreat.gd" id="8_retreat"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_take_cover.gd" id="9_take_cover"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_engage.gd" id="10_engage"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_reposition.gd" id="11_reposition"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_investigate_noise.gd" id="12_investigate"]
+[ext_resource type="Script" path="res://scripts/bots/behaviors/action_patrol.gd" id="13_patrol"]
+[ext_resource type="Script" path="res://addons/beehave/nodes/beehave_tree.gd" id="14_beehave_tree"]
+[ext_resource type="Script" path="res://addons/beehave/nodes/composites/selector.gd" id="15_selector"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_bot_body"]
 radius = 0.4
@@ -88,3 +97,30 @@ player_controlled = false
 [node name="Perception" type="Node" parent="."]
 script = ExtResource("4_perception")
 eye_path = NodePath("../Head/Camera3D")
+
+[node name="BehaviorTree" type="Node" parent="."]
+script = ExtResource("14_beehave_tree")
+
+[node name="Selector" type="Node" parent="BehaviorTree"]
+script = ExtResource("15_selector")
+
+[node name="Respawn" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("7_respawn")
+
+[node name="Retreat" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("8_retreat")
+
+[node name="TakeCover" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("9_take_cover")
+
+[node name="Engage" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("10_engage")
+
+[node name="Reposition" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("11_reposition")
+
+[node name="InvestigateNoise" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("12_investigate")
+
+[node name="Patrol" type="Node" parent="BehaviorTree/Selector"]
+script = ExtResource("13_patrol")
