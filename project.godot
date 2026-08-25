@@ -21,7 +21,7 @@ InputConfig="*res://scripts/core/input_config.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/beehave/plugin.cfg")
 
 [input]
 
