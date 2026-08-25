@@ -132,6 +132,7 @@ static func slide_boost_velocity(vel: Vector3, boost: float) -> Vector3:
 func _ready() -> void:
 	_current_height = standing_height
 	_apply_height(_current_height)
+	add_to_group("combatants")
 
 
 func _physics_process(delta: float) -> void:

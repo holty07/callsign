@@ -69,7 +69,7 @@ The headline feature. This is the biggest single chunk of work in the project.
 
 - [x] NavigationRegion3D baked on the test map, verify agent radius against player hull
 - [x] Beehave behaviour trees under `addons/`
-- [ ] Perception: FOV cone + raycast line-of-sight, with reaction delay and a memory
+- [x] Perception: FOV cone + raycast line-of-sight, with reaction delay and a memory
       of last-known position so bots don't have omniscient tracking
 - [ ] Behaviours: patrol, investigate noise, engage, take cover, reposition, retreat
       at low health, respawn
