@@ -14,7 +14,7 @@
 [ext_resource type="Script" path="res://scripts/bots/behaviors/action_investigate_noise.gd" id="12_investigate"]
 [ext_resource type="Script" path="res://scripts/bots/behaviors/action_patrol.gd" id="13_patrol"]
 [ext_resource type="Script" path="res://addons/beehave/nodes/beehave_tree.gd" id="14_beehave_tree"]
-[ext_resource type="Script" path="res://addons/beehave/nodes/composites/selector.gd" id="15_selector"]
+[ext_resource type="Script" path="res://addons/beehave/nodes/composites/selector_reactive.gd" id="15_selector"]
 [ext_resource type="Script" path="res://scripts/bots/debug_visuals.gd" id="16_debugvis"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_bot_body"]
