@@ -27,7 +27,6 @@ func _ready() -> void:
 	add_to_group("combatants")
 	_nav_agent.target_desired_distance = arrival_distance
 	health.died.connect(_on_died)
-	print("Bot %s spawned at %s" % [name, global_position])
 
 
 func _on_died() -> void:

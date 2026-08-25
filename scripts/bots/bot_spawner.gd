@@ -16,7 +16,16 @@ extends Node3D
 @export var spawn_points_group: String = "bot_spawn_points"
 
 
+## Deferred a frame rather than spawning inline: _ready() runs in sibling
+## declaration order, so querying spawn_points_group here would run before
+## sibling marker nodes later in the tree have had their own _ready() call
+## add_to_group() — exactly what happened when BotSpawner was declared
+## before its map's spawn-point markers, silently falling back to this
+## node's own position for every bot (all 4 spawned stacked on top of each
+## other at the same point and flung each other away on contact). Waiting
+## a frame makes this correct regardless of node order.
 func _ready() -> void:
+	await get_tree().process_frame
 	var positions := _spawn_positions_for(bot_count)
 	for i in bot_count:
 		_spawn_bot(i, positions[i])
@@ -29,6 +38,11 @@ func _spawn_bot(index: int, spawn_position: Vector3) -> void:
 	bot.global_position = spawn_position
 	if difficulty:
 		bot.apply_difficulty(difficulty)
+	# Logged here, after global_position is actually set — logging this in
+	# Bot's own _ready() printed (0, 0, 0) unconditionally, since _ready()
+	# fires the instant add_child() above runs, before this method's own
+	# next line gets a chance to place it.
+	print("%s spawned at %s" % [bot.name, bot.global_position])
 
 
 ## One position per bot, drawn from spawn_points_group without replacement

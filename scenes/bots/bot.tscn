@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scripts/bots/bot.gd" id="1_bot"]
 [ext_resource type="Script" path="res://scripts/weapons/health.gd" id="2_health"]
@@ -15,6 +15,7 @@
 [ext_resource type="Script" path="res://scripts/bots/behaviors/action_patrol.gd" id="13_patrol"]
 [ext_resource type="Script" path="res://addons/beehave/nodes/beehave_tree.gd" id="14_beehave_tree"]
 [ext_resource type="Script" path="res://addons/beehave/nodes/composites/selector.gd" id="15_selector"]
+[ext_resource type="Script" path="res://scripts/bots/debug_visuals.gd" id="16_debugvis"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_bot_body"]
 radius = 0.4
@@ -127,3 +128,13 @@ script = ExtResource("12_investigate")
 
 [node name="Patrol" type="Node" parent="BehaviorTree/Selector"]
 script = ExtResource("13_patrol")
+
+[node name="DebugVisuals" type="Node3D" parent="."]
+script = ExtResource("16_debugvis")
+
+[node name="Label3D" type="Label3D" parent="DebugVisuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+billboard = 1
+no_depth_test = true
+font_size = 48
+outline_size = 8
