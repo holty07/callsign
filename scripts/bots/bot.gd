@@ -26,6 +26,12 @@ extends CharacterBody3D
 func _ready() -> void:
 	add_to_group("combatants")
 	_nav_agent.target_desired_distance = arrival_distance
+	health.died.connect(_on_died)
+	print("Bot %s spawned at %s" % [name, global_position])
+
+
+func _on_died() -> void:
+	print("Bot %s died at %s" % [name, global_position])
 
 
 func move_to(target_position: Vector3) -> void:
@@ -66,6 +72,7 @@ func respawn_at(spawn_position: Vector3) -> void:
 	velocity = Vector3.ZERO
 	global_position = spawn_position
 	stop_moving()
+	print("Bot %s respawned at %s" % [name, global_position])
 
 
 func _physics_process(delta: float) -> void:

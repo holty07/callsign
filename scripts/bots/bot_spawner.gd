@@ -19,11 +19,12 @@ extends Node3D
 func _ready() -> void:
 	var positions := _spawn_positions_for(bot_count)
 	for i in bot_count:
-		_spawn_bot(positions[i])
+		_spawn_bot(i, positions[i])
 
 
-func _spawn_bot(spawn_position: Vector3) -> void:
+func _spawn_bot(index: int, spawn_position: Vector3) -> void:
 	var bot: Bot = bot_scene.instantiate()
+	bot.name = "Bot%d" % (index + 1)
 	add_child(bot)
 	bot.global_position = spawn_position
 	if difficulty:
