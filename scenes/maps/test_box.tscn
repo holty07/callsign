@@ -1,9 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/tuning_panel.tscn" id="2_tuning"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/dummy_target.tscn" id="3_dummy"]
 [ext_resource type="Script" path="res://scripts/bots/navigation_baker.gd" id="4_navbaker"]
+[ext_resource type="Script" path="res://scripts/bots/bot_spawner.gd" id="5_botspawner"]
+[ext_resource type="Script" path="res://scripts/core/group_marker.gd" id="6_marker"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_box"]
 
@@ -180,3 +182,82 @@ size = Vector3(6, 1, 4)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -32.5)
 use_collision = true
 size = Vector3(6, 1, 6)
+
+[node name="BotSpawner" type="Node3D" parent="."]
+script = ExtResource("5_botspawner")
+
+[node name="BotSpawnPoints" type="Node3D" parent="."]
+
+[node name="SpawnPoint_Ground_East" type="Marker3D" parent="BotSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, 0)
+script = ExtResource("6_marker")
+group_name = "bot_spawn_points"
+
+[node name="SpawnPoint_Ground_West" type="Marker3D" parent="BotSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, 0)
+script = ExtResource("6_marker")
+group_name = "bot_spawn_points"
+
+[node name="SpawnPoint_Corridor" type="Marker3D" parent="BotSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.1, -5)
+script = ExtResource("6_marker")
+group_name = "bot_spawn_points"
+
+[node name="SpawnPoint_Ramp_Top" type="Marker3D" parent="BotSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.1, -5)
+script = ExtResource("6_marker")
+group_name = "bot_spawn_points"
+
+[node name="SpawnPoint_Stairs_Top" type="Marker3D" parent="BotSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -22)
+script = ExtResource("6_marker")
+group_name = "bot_spawn_points"
+
+[node name="BotWaypoints" type="Node3D" parent="."]
+
+[node name="Waypoint_Ground_East" type="Marker3D" parent="BotWaypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, -10)
+script = ExtResource("6_marker")
+group_name = "bot_waypoints"
+
+[node name="Waypoint_Ground_West" type="Marker3D" parent="BotWaypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, -10)
+script = ExtResource("6_marker")
+group_name = "bot_waypoints"
+
+[node name="Waypoint_Corridor_Far" type="Marker3D" parent="BotWaypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.1, -20)
+script = ExtResource("6_marker")
+group_name = "bot_waypoints"
+
+[node name="Waypoint_Ramp_Top" type="Marker3D" parent="BotWaypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.1, -5)
+script = ExtResource("6_marker")
+group_name = "bot_waypoints"
+
+[node name="Waypoint_Stairs_Top" type="Marker3D" parent="BotWaypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -25)
+script = ExtResource("6_marker")
+group_name = "bot_waypoints"
+
+[node name="Waypoint_Ground_South" type="Marker3D" parent="BotWaypoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 3)
+script = ExtResource("6_marker")
+group_name = "bot_waypoints"
+
+[node name="CoverPoints" type="Node3D" parent="."]
+
+[node name="CoverPoint_Corridor_Corner" type="Marker3D" parent="CoverPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.1, -2)
+script = ExtResource("6_marker")
+group_name = "cover_points"
+
+[node name="CoverPoint_Ramp_Corner" type="Marker3D" parent="CoverPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.1, -2)
+script = ExtResource("6_marker")
+group_name = "cover_points"
+
+[node name="CoverPoint_Stairs_Base" type="Marker3D" parent="CoverPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.1, -14)
+script = ExtResource("6_marker")
+group_name = "cover_points"
