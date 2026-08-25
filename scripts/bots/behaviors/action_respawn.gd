@@ -2,11 +2,17 @@
 #
 # While dead, this pre-empts every other branch (it's first in the root
 # Selector) so a dead bot doesn't try to patrol or fight while waiting out
-# its respawn timer. Picks a random "bot_spawn_points" marker so a bot
-# doesn't reliably reappear in the same spot it just died in.
+# its respawn timer. Picks a random "bot_spawn_points" marker, preferring
+# one no living combatant currently stands near.
 extends ActionLeaf
 
 @export var respawn_delay: float = 3.0
+## Below this distance from a living combatant, a spawn point is treated as
+## occupied. Landing on top of someone spawns two fully-overlapping
+## CharacterBody3D capsules that immediately depenetrate into each other at
+## high speed — the same class of bug fixed for HitZone colliders and for
+## BotSpawner's own initial placement, except this time on respawn, mid-match.
+@export var clear_radius: float = 1.5
 
 var _timer: float = -1.0
 
@@ -30,7 +36,4 @@ func tick(actor: Node, _blackboard: Blackboard) -> int:
 
 
 func _spawn_position(bot: Bot) -> Vector3:
-	var points := bot.get_tree().get_nodes_in_group("bot_spawn_points")
-	if points.is_empty():
-		return bot.global_position
-	return points[randi() % points.size()].global_position
+	return SpawnPointPicker.pick(bot.get_tree(), "bot_spawn_points", bot, clear_radius, bot.global_position)

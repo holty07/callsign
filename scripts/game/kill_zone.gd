@@ -12,6 +12,10 @@ extends Area3D
 
 @export var spawn_points_group: String = "bot_spawn_points"
 @export var player_spawn_point_path: NodePath
+## Same hazard SpawnPointPicker guards against elsewhere: landing on top of
+## a living combatant spawns two fully-overlapping CharacterBody3D capsules
+## that immediately depenetrate into each other at high speed.
+@export var clear_radius: float = 1.5
 
 
 func _ready() -> void:
@@ -31,10 +35,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 func _pick_respawn_position(body: Node3D) -> Vector3:
 	if body is Bot:
-		var points := get_tree().get_nodes_in_group(spawn_points_group)
-		if not points.is_empty():
-			return points[randi() % points.size()].global_position
-		return body.global_position
+		return SpawnPointPicker.pick(get_tree(), spawn_points_group, body, clear_radius, body.global_position)
 
 	if not player_spawn_point_path.is_empty():
 		var marker := get_node_or_null(player_spawn_point_path)

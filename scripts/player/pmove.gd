@@ -136,6 +136,10 @@ func _ready() -> void:
 	add_to_group("combatants")
 
 
+func is_alive() -> bool:
+	return _health.current_health > 0.0
+
+
 ## Resets health and teleports back to a spawn point, zeroing the private
 ## _velocity_qu this script tracks across ticks — setting the engine's own
 ## `velocity` alone isn't enough, since _physics_process below overwrites it
