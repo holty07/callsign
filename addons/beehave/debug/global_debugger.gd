@@ -6,8 +6,13 @@ var _pending_activation_id: int = -1 # Store the ID if activation arrives before
 var _editor_visible: bool = false # Track editor visibility
 
 
+## Local patch (not upstream bitbrain/beehave): registering unconditionally
+## leaves a dangling capture that the engine tries (and fails) to unregister
+## at shutdown ("Capture not registered: 'beehave'") whenever there's no
+## real debugger attached — see the matching note in debugger_messages.gd.
 func _enter_tree() -> void:
-	EngineDebugger.register_message_capture("beehave", _on_debug_message)
+	if EngineDebugger.is_active():
+		EngineDebugger.register_message_capture("beehave", _on_debug_message)
 
 
 func _on_debug_message(message: String, data: Array) -> bool:

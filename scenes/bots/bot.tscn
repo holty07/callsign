@@ -57,6 +57,8 @@ max_health = 100.0
 
 [node name="TorsoBody" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+collision_layer = 2
+collision_mask = 0
 script = ExtResource("3_hitzone")
 is_head = false
 
@@ -69,6 +71,8 @@ material_override = SubResource("StandardMaterial3D_bot")
 
 [node name="HeadHitZone" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+collision_layer = 2
+collision_mask = 0
 script = ExtResource("3_hitzone")
 is_head = true
 health_path = NodePath("../Health")
