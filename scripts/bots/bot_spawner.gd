@@ -17,20 +17,40 @@ extends Node3D
 
 
 func _ready() -> void:
-	for _i in bot_count:
-		_spawn_bot()
+	var positions := _spawn_positions_for(bot_count)
+	for i in bot_count:
+		_spawn_bot(positions[i])
 
 
-func _spawn_bot() -> void:
+func _spawn_bot(spawn_position: Vector3) -> void:
 	var bot: Bot = bot_scene.instantiate()
 	add_child(bot)
-	bot.global_position = _pick_spawn_position()
+	bot.global_position = spawn_position
 	if difficulty:
 		bot.apply_difficulty(difficulty)
 
 
-func _pick_spawn_position() -> Vector3:
-	var points := get_tree().get_nodes_in_group(spawn_points_group)
-	if points.is_empty():
-		return global_position
-	return points[randi() % points.size()].global_position
+## One position per bot, drawn from spawn_points_group without replacement
+## as long as there are enough distinct markers — picking with replacement
+## (the previous approach) let two bots land on the exact same marker,
+## spawning two fully-overlapping CharacterBody3D capsules that immediately
+## depenetrate into each other at high speed, the same class of bug fixed
+## for HitZone colliders. Only wraps around (repeating positions) once the
+## map has fewer markers than bots to spawn.
+func _spawn_positions_for(count: int) -> Array[Vector3]:
+	var markers := get_tree().get_nodes_in_group(spawn_points_group)
+	var positions: Array[Vector3] = []
+
+	if markers.is_empty():
+		positions.resize(count)
+		positions.fill(global_position)
+		return positions
+
+	var marker_positions: Array[Vector3] = []
+	for marker in markers:
+		marker_positions.append(marker.global_position)
+	marker_positions.shuffle()
+
+	for i in count:
+		positions.append(marker_positions[i % marker_positions.size()])
+	return positions
