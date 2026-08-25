@@ -109,3 +109,46 @@ func test_health_reports_damage_and_death() -> void:
 	assert_int(damage_events.size()).is_equal(2)
 
 	health.free()
+
+
+func _make_weapon_with_camera() -> WeaponBase:
+	var camera: Camera3D = auto_free(Camera3D.new())
+	add_child(camera)
+	var weapon: WeaponBase = auto_free((load("res://scenes/weapons/rifle.tscn") as PackedScene).instantiate())
+	camera.add_child(weapon)
+	return weapon
+
+
+func test_ai_controlled_weapon_wants_to_fire_from_ai_fire_held_not_global_input() -> void:
+	# A bot's rifle must never read the shared Input singleton — that would
+	# fire every bot's gun whenever the player (or another bot) does. Checked
+	# at the trigger-decision level (not a full fire()) since fire()'s FX
+	# side effects (WeaponFX tracers/decals) need a live running scene this
+	# suite doesn't have.
+	var weapon := _make_weapon_with_camera()
+	weapon.player_controlled = false
+
+	assert_bool(weapon._wants_to_fire()).is_false()
+	weapon.ai_fire_held = true
+	assert_bool(weapon._wants_to_fire()).is_true()
+
+
+func test_player_controlled_weapon_ignores_ai_fields() -> void:
+	var weapon := _make_weapon_with_camera()
+	# player_controlled defaults to true; ai_fire_held must be a no-op.
+	weapon.ai_fire_held = true
+
+	assert_bool(weapon._wants_to_fire()).is_false()
+
+
+func test_ai_controlled_weapon_reload_request_is_one_shot() -> void:
+	var weapon := _make_weapon_with_camera()
+	weapon.player_controlled = false
+
+	weapon.ai_reload_requested = true
+	assert_bool(weapon._wants_reload()).is_true()
+
+	# _physics_process clears the one-shot request the tick after it's read,
+	# mirroring Input.is_action_just_pressed's single-frame pulse.
+	weapon._physics_process(1.0 / 120.0)
+	assert_bool(weapon.ai_reload_requested).is_false()

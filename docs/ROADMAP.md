@@ -75,7 +75,7 @@ The headline feature. This is the biggest single chunk of work in the project.
       at low health, respawn
 - [ ] Aim model: turn rate limit, error cone, burst discipline, target reacquisition
 - [ ] Difficulty tiers driven by reaction delay / aim error / spread, not health cheats
-- [ ] Bots use the same weapon system as the player — no special-cased damage
+- [x] Bots use the same weapon system as the player — no special-cased damage
 - [ ] Bot count and difficulty configurable at match start, default: on
 
 **Done when:** a 4-bot free-for-all is winnable but not trivial, and bots don't get

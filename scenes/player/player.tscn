@@ -1,9 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/pmove.gd" id="1_pmove"]
 [ext_resource type="Script" path="res://scripts/player/camera_look.gd" id="2_camlook"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/rifle.tscn" id="3_rifle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="4_crosshair"]
+[ext_resource type="Script" path="res://scripts/weapons/health.gd" id="5_health"]
+[ext_resource type="Script" path="res://scripts/weapons/hit_zone.gd" id="6_hitzone"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -15,6 +17,18 @@ script = ExtResource("1_pmove")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("5_health")
+max_health = 100.0
+
+[node name="Body" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+script = ExtResource("6_hitzone")
+is_head = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
 shape = SubResource("CapsuleShape3D_player")
 
 [node name="Head" type="Node3D" parent="."]

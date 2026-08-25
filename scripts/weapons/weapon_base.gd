@@ -65,6 +65,21 @@ signal hit_confirmed(was_headshot: bool, was_kill: bool)
 @export var sway_max_speed_qu: float = 380.0
 @export var sway_amplitude_smoothing: float = 8.0
 
+## When true (the player's rifle), fire/reload/ADS read straight from the
+## global Input singleton, same as ever. When false (a bot's rifle), they
+## read the ai_* fields below instead — reading global Input here would
+## otherwise mean every bot fires whenever the player does. Everything
+## downstream of the trigger (fire(), Hitscan, Health/HitZone damage) is
+## unchanged either way, so bots go through the exact same weapon code path.
+@export var player_controlled: bool = true
+
+## Set by a bot's aim/behaviour scripts each tick instead of reading Input.
+var ai_fire_held: bool = false
+var ai_ads_held: bool = false
+## One-shot: read and cleared by _physics_process the tick after it's set,
+## mirroring Input.is_action_just_pressed's one-tick pulse.
+var ai_reload_requested: bool = false
+
 @onready var _muzzle: Node3D = $Muzzle
 
 var _player: PMove
@@ -123,14 +138,23 @@ func _physics_process(delta: float) -> void:
 	_update_reload_offset(delta)
 	_update_sway(delta)
 
-	if Input.is_action_just_pressed("reload"):
+	if _wants_reload():
 		reload()
+	ai_reload_requested = false
 
-	if Input.is_action_pressed("fire") and _can_fire():
+	if _wants_to_fire() and _can_fire():
 		fire()
 
 	if _camera_look and _camera_look.has_method("apply_recoil_offset"):
 		_camera_look.apply_recoil_offset(_recoil.process(delta))
+
+
+func _wants_to_fire() -> bool:
+	return Input.is_action_pressed("fire") if player_controlled else ai_fire_held
+
+
+func _wants_reload() -> bool:
+	return Input.is_action_just_pressed("reload") if player_controlled else ai_reload_requested
 
 
 func _can_fire() -> bool:
@@ -232,7 +256,8 @@ func _update_sprint_out_timer(delta: float) -> void:
 
 
 func _update_ads(delta: float) -> void:
-	_ads_active = Input.is_action_pressed("ads") and _sprint_release_timer <= 0.0
+	var ads_held := Input.is_action_pressed("ads") if player_controlled else ai_ads_held
+	_ads_active = ads_held and _sprint_release_timer <= 0.0
 
 	var target_blend := 1.0 if _ads_active else 0.0
 	var blend_speed := 1.0 / maxf(ads_transition_time, 0.001)
