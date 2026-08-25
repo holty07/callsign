@@ -73,7 +73,7 @@ The headline feature. This is the biggest single chunk of work in the project.
       of last-known position so bots don't have omniscient tracking
 - [ ] Behaviours: patrol, investigate noise, engage, take cover, reposition, retreat
       at low health, respawn
-- [ ] Aim model: turn rate limit, error cone, burst discipline, target reacquisition
+- [x] Aim model: turn rate limit, error cone, burst discipline, target reacquisition
 - [ ] Difficulty tiers driven by reaction delay / aim error / spread, not health cheats
 - [x] Bots use the same weapon system as the player — no special-cased damage
 - [ ] Bot count and difficulty configurable at match start, default: on
