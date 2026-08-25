@@ -55,6 +55,7 @@ class_name PMove
 
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var _head: Node3D = $Head
+@onready var _health: Health = $Health
 
 var _velocity_qu: Vector3 = Vector3.ZERO
 var _current_height: float = standing_height
@@ -133,6 +134,17 @@ func _ready() -> void:
 	_current_height = standing_height
 	_apply_height(_current_height)
 	add_to_group("combatants")
+
+
+## Resets health and teleports back to a spawn point, zeroing the private
+## _velocity_qu this script tracks across ticks — setting the engine's own
+## `velocity` alone isn't enough, since _physics_process below overwrites it
+## from _velocity_qu every tick regardless of what it was set to externally.
+func respawn_at(spawn_position: Vector3) -> void:
+	_health.reset()
+	_velocity_qu = Vector3.ZERO
+	velocity = Vector3.ZERO
+	global_position = spawn_position
 
 
 func _physics_process(delta: float) -> void:
