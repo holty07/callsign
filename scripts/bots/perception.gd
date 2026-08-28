@@ -85,13 +85,37 @@ static func should_forget(time_since_seen: float, memory_duration: float) -> boo
 	return time_since_seen >= memory_duration
 
 
+## Which of this tick's confirmed-visible sightings to lock onto. Sticks
+## with `current` as long as it's still among them, rather than always
+## snapping to whichever is nearest right now — with several combatants at
+## similar range, "nearest" trades back and forth between them almost every
+## tick as everyone moves, and each trade resets aim.gd's reacquire timer
+## before it ever elapses, so the bot aims but never actually opens fire.
+## Kept static and side-effect free so it's unit-testable without a live
+## scene. `confirmed` maps each combatant confirmed visible this tick to its
+## distance from this bot.
+static func pick_target(current: Node3D, confirmed: Dictionary) -> Node3D:
+	if confirmed.is_empty():
+		return null
+	if current != null and confirmed.has(current):
+		return current
+
+	var best_target: Node3D = null
+	var best_distance := INF
+	for node in confirmed:
+		var distance: float = confirmed[node]
+		if distance < best_distance:
+			best_distance = distance
+			best_target = node
+	return best_target
+
+
 func _physics_process(delta: float) -> void:
 	if _is_dead(_actor):
 		_confirmed_target = null
 		return
 
-	var best_target: Node3D = null
-	var best_distance := INF
+	var confirmed_this_tick: Dictionary = {} # node -> distance, only for confirmed sightings
 
 	for node in get_tree().get_nodes_in_group(_GROUP):
 		if node == _actor or not is_instance_valid(node) or not (node is Node3D):
@@ -115,9 +139,7 @@ func _physics_process(delta: float) -> void:
 			_time_since_seen[node] = 0.0
 			if should_confirm_sighting(_sight_time[node], reaction_delay):
 				_last_known_position[node] = node.global_position
-				if distance < best_distance:
-					best_distance = distance
-					best_target = node
+				confirmed_this_tick[node] = distance
 		else:
 			_sight_time[node] = 0.0
 			if _last_known_position.has(node):
@@ -127,7 +149,7 @@ func _physics_process(delta: float) -> void:
 					_last_known_position.erase(node)
 					_time_since_seen.erase(node)
 
-	_confirmed_target = best_target
+	_confirmed_target = pick_target(_confirmed_target, confirmed_this_tick)
 
 
 ## The target currently confirmed visible and reacted to (nearest, if more
