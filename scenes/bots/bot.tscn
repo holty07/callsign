@@ -57,32 +57,35 @@ height = 1.8
 script = ExtResource("2_health")
 max_health = 100.0
 
-[node name="TorsoBody" type="StaticBody3D" parent="."]
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="TorsoBody" type="StaticBody3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("3_hitzone")
 is_head = false
+health_path = NodePath("../../Health")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TorsoBody"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Visual/TorsoBody"]
 shape = SubResource("CapsuleShape3D_bot_torso")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="TorsoBody"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Visual/TorsoBody"]
 mesh = SubResource("CapsuleMesh_bot_torso")
 material_override = SubResource("StandardMaterial3D_bot")
 
-[node name="HeadHitZone" type="StaticBody3D" parent="."]
+[node name="HeadHitZone" type="StaticBody3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("3_hitzone")
 is_head = true
-health_path = NodePath("../Health")
+health_path = NodePath("../../Health")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="HeadHitZone"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Visual/HeadHitZone"]
 shape = SubResource("SphereShape3D_bot_head")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="HeadHitZone"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Visual/HeadHitZone"]
 mesh = SubResource("SphereMesh_bot_head")
 material_override = SubResource("StandardMaterial3D_bot")
 

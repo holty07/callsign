@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/bots/bot.tscn" id="1_bot"]
+[ext_resource type="Script" path="res://scripts/bots/navigation_baker.gd" id="2_navbaker"]
+[ext_resource type="Script" path="res://scripts/maps/nav_debug_driver.gd" id="3_driver"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_navdebug"]
+geometry_parsed_geometry_type = 0
+agent_radius = 0.4
+agent_height = 1.8
+agent_max_climb = 0.3
+agent_max_slope = 45.0
+
+[node name="NavDebug" type="Node3D"]
+script = ExtResource("3_driver")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_navdebug")
+script = ExtResource("2_navbaker")
+
+[node name="Geometry" type="Node3D" parent="NavigationRegion3D"]
+
+[node name="Ground" type="CSGBox3D" parent="NavigationRegion3D/Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
+size = Vector3(40, 1, 40)
+
+[node name="Bot" parent="." instance=ExtResource("1_bot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.05, 0)
+
+[node name="TargetMarker" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.05, 0)
