@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 # Picks a spawn point from a group, preferring one no living combatant
-# currently stands near. Shared by action_respawn.gd (a bot's normal
-# mid-match respawn) and kill_zone.gd (falling out of bounds) — both hit
-# the same hazard: landing on top of someone spawns two fully-overlapping
-# CharacterBody3D capsules that immediately depenetrate into each other at
-# high speed, the same class of bug fixed for HitZone colliders and for
-# BotSpawner's own initial placement.
+# currently stands near. Shared by bot_spawner.gd (initial placement),
+# action_respawn.gd (a bot's normal mid-match respawn) and kill_zone.gd
+# (falling out of bounds) — all three hit the same hazard: landing on top
+# of someone spawns two fully-overlapping CharacterBody3D capsules that
+# immediately depenetrate into each other at high speed. Also claims a
+# short-lived SpawnReservations hold on whatever it picks, since two
+# different actors' respawns resolving within the same stretch of time can
+# each fail to see the other as occupying anything yet.
 class_name SpawnPointPicker
 
 
@@ -17,12 +19,29 @@ static func pick(tree: SceneTree, group: String, avoiding: Node, clear_radius: f
 
 	var shuffled: Array = points.duplicate()
 	shuffled.shuffle()
-	for point in shuffled:
-		if _is_clear(tree, point.global_position, avoiding, clear_radius):
-			return point.global_position
 
-	# every point is currently occupied; take one anyway rather than not
-	# respawning at all.
+	# A point with a living combatant standing on it is never acceptable
+	# short of every single point being occupied (handled below). A clear
+	# point someone else just reserved is a lesser risk than that — worth
+	# preferring over it, but not worth treating as if it were occupied.
+	var clear_but_reserved: Node = null
+	for point in shuffled:
+		if not _is_clear(tree, point.global_position, avoiding, clear_radius):
+			continue
+		if SpawnReservations.is_reserved(point):
+			if clear_but_reserved == null:
+				clear_but_reserved = point
+			continue
+		SpawnReservations.reserve(point)
+		return point.global_position
+
+	if clear_but_reserved != null:
+		SpawnReservations.reserve(clear_but_reserved)
+		return clear_but_reserved.global_position
+
+	# every point currently has a living combatant standing on it; take one
+	# anyway rather than not respawning at all.
+	SpawnReservations.reserve(shuffled[0])
 	return shuffled[0].global_position
 
 

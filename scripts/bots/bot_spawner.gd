@@ -14,6 +14,10 @@ extends Node3D
 ## Falls back to this node's own position if the map defines no markers in
 ## this group (see action_respawn.gd, which reads the same group).
 @export var spawn_points_group: String = "bot_spawn_points"
+## Same hazard SpawnPointPicker guards against elsewhere: landing on top of
+## a living combatant spawns two fully-overlapping CharacterBody3D capsules
+## that immediately depenetrate into each other at high speed.
+@export var clear_radius: float = 1.5
 
 
 ## Deferred a frame rather than spawning inline: _ready() runs in sibling
@@ -26,46 +30,21 @@ extends Node3D
 ## a frame makes this correct regardless of node order.
 func _ready() -> void:
 	await get_tree().process_frame
-	var positions := _spawn_positions_for(bot_count)
 	for i in bot_count:
-		_spawn_bot(i, positions[i])
+		_spawn_bot(i)
 
 
-func _spawn_bot(index: int, spawn_position: Vector3) -> void:
+## Spawns and places one bot at a time (rather than pre-computing every
+## position up front) so each pick sees the previous bots already standing
+## where SpawnPointPicker put them — the same shared occupancy/reservation
+## check every other respawn path uses, instead of a separate
+## without-replacement shuffle that silently doubled bots up onto the same
+## marker whenever the map had fewer markers than bot_count.
+func _spawn_bot(index: int) -> void:
 	var bot: Bot = bot_scene.instantiate()
 	bot.name = "Bot%d" % (index + 1)
 	add_child(bot)
-	bot.global_position = spawn_position
+	bot.global_position = SpawnPointPicker.pick(get_tree(), spawn_points_group, bot, clear_radius, global_position)
 	if difficulty:
 		bot.apply_difficulty(difficulty)
-	# Logged here, after global_position is actually set — logging this in
-	# Bot's own _ready() printed (0, 0, 0) unconditionally, since _ready()
-	# fires the instant add_child() above runs, before this method's own
-	# next line gets a chance to place it.
 	print("%s spawned at %s" % [bot.name, bot.global_position])
-
-
-## One position per bot, drawn from spawn_points_group without replacement
-## as long as there are enough distinct markers — picking with replacement
-## (the previous approach) let two bots land on the exact same marker,
-## spawning two fully-overlapping CharacterBody3D capsules that immediately
-## depenetrate into each other at high speed, the same class of bug fixed
-## for HitZone colliders. Only wraps around (repeating positions) once the
-## map has fewer markers than bots to spawn.
-func _spawn_positions_for(count: int) -> Array[Vector3]:
-	var markers := get_tree().get_nodes_in_group(spawn_points_group)
-	var positions: Array[Vector3] = []
-
-	if markers.is_empty():
-		positions.resize(count)
-		positions.fill(global_position)
-		return positions
-
-	var marker_positions: Array[Vector3] = []
-	for marker in markers:
-		marker_positions.append(marker.global_position)
-	marker_positions.shuffle()
-
-	for i in count:
-		positions.append(marker_positions[i % marker_positions.size()])
-	return positions

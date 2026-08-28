@@ -55,6 +55,25 @@ func test_pick_falls_back_to_the_given_position_with_no_markers() -> void:
 	assert_vector(result).is_equal_approx(Vector3(9.0, 9.0, 9.0), Vector3(0.01, 0.01, 0.01))
 
 
+func test_pick_does_not_reuse_a_marker_another_pick_just_reserved() -> void:
+	# Stopgap for two combatants resolving a respawn within the same
+	# stretch of time: distance-based occupancy alone only rules a marker
+	# out once someone is standing on it *and* reports itself alive, which
+	# a respawn still mid-flight hasn't done yet. Reserving a marker the
+	# instant it's picked closes that gap.
+	var group := "picker_test_markers_reservation"
+	var first := _make_marker(Vector3(0.0, 0.0, 0.0), group)
+	var second := _make_marker(Vector3(30.0, 0.0, 30.0), group)
+
+	var first_pick := SpawnPointPicker.pick(get_tree(), group, null, 1.5, Vector3.ZERO)
+	var second_pick := SpawnPointPicker.pick(get_tree(), group, null, 1.5, Vector3.ZERO)
+
+	assert_vector(first_pick).is_not_equal(second_pick)
+	var picks := [first_pick, second_pick]
+	assert_bool(picks.has(first.global_position)).is_true()
+	assert_bool(picks.has(second.global_position)).is_true()
+
+
 func test_pick_returns_a_point_anyway_when_every_point_is_occupied() -> void:
 	var group := "picker_test_markers_all_occupied"
 	var only_point := _make_marker(Vector3(3.0, 0.0, 3.0), group)
