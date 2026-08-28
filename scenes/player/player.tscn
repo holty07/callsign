@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="4_crosshair"]
 [ext_resource type="Script" path="res://scripts/weapons/health.gd" id="5_health"]
 [ext_resource type="Script" path="res://scripts/weapons/hit_zone.gd" id="6_hitzone"]
+[ext_resource type="PackedScene" path="res://scenes/ui/death_overlay.tscn" id="7_deathoverlay"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -51,3 +52,6 @@ fov = 90.0
 [node name="Crosshair" parent="." instance=ExtResource("4_crosshair")]
 weapon_path = NodePath("../Head/Camera3D/Rifle")
 camera_path = NodePath("../Head/Camera3D")
+
+[node name="DeathOverlay" parent="." instance=ExtResource("7_deathoverlay")]
+player_path = NodePath("..")

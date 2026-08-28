@@ -53,11 +53,22 @@ class_name PMove
 @export var max_step_height: float = 0.3
 @export var floor_max_angle_deg: float = 45.0
 
+@export_group("Death")
+## Placeholder parity with bot.gd's action_respawn.gd — same default delay.
+## No death screen, ragdoll, or dedicated respawn marker yet; revisit once
+## the match loop (M4) owns round/respawn flow. Until then this just
+## proves combat death/respawn works for the player at all.
+@export var respawn_delay: float = 3.0
+## Optional marker to respawn at; falls back to respawning in place
+## (same position, health reset) if left unassigned.
+@export var respawn_point_path: NodePath
+
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var _head: Node3D = $Head
 @onready var _health: Health = $Health
 
 var _velocity_qu: Vector3 = Vector3.ZERO
+var _respawn_timer: float = -1.0
 var _current_height: float = standing_height
 var _was_sprinting: bool = false
 var _is_sliding: bool = false
@@ -134,6 +145,12 @@ func _ready() -> void:
 	_current_height = standing_height
 	_apply_height(_current_height)
 	add_to_group("combatants")
+	_health.died.connect(_on_died)
+
+
+func _on_died() -> void:
+	print("Player died at %s" % global_position)
+	_respawn_timer = respawn_delay
 
 
 func is_alive() -> bool:
@@ -149,9 +166,37 @@ func respawn_at(spawn_position: Vector3) -> void:
 	_velocity_qu = Vector3.ZERO
 	velocity = Vector3.ZERO
 	global_position = spawn_position
+	_respawn_timer = -1.0
+	print("Player respawned at %s" % global_position)
 
 
+func _respawn_position() -> Vector3:
+	if not respawn_point_path.is_empty():
+		var marker := get_node_or_null(respawn_point_path)
+		if marker:
+			return marker.global_position
+	return global_position
+
+
+## No death animation/ragdoll yet (placeholder, same as bot.gd's own death
+## visual) — the player just stops responding to input for respawn_delay
+## seconds. Gravity/collision are left alone rather than frozen outright so
+## a mid-air death still settles onto the floor instead of hanging in place.
 func _physics_process(delta: float) -> void:
+	if not is_alive():
+		_respawn_timer -= delta
+		if _respawn_timer <= 0.0:
+			respawn_at(_respawn_position())
+			return
+		velocity.x = 0.0
+		velocity.z = 0.0
+		if is_on_floor():
+			velocity.y = 0.0
+		else:
+			velocity.y -= gravity_qu * Units.QU_TO_M * delta
+		move_and_slide()
+		return
+
 	floor_max_angle = deg_to_rad(floor_max_angle_deg)
 
 	var grounded := is_on_floor()
