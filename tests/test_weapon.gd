@@ -82,6 +82,18 @@ func test_recoil_horizontal_drift_is_deterministic_for_a_given_seed() -> void:
 	assert_vector(a.process(0.0)).is_equal(b.process(0.0))
 
 
+func test_friendly_fire_blocks_a_same_team_hit_when_disabled() -> void:
+	assert_bool(WeaponBase.is_friendly_fire_blocked(false, Team.A, Team.A)).is_true()
+
+
+func test_friendly_fire_allows_a_cross_team_hit_when_disabled() -> void:
+	assert_bool(WeaponBase.is_friendly_fire_blocked(false, Team.A, Team.B)).is_false()
+
+
+func test_friendly_fire_allows_a_same_team_hit_when_enabled() -> void:
+	assert_bool(WeaponBase.is_friendly_fire_blocked(true, Team.A, Team.A)).is_false()
+
+
 func test_health_reports_damage_and_death() -> void:
 	var health := Health.new()
 	health.max_health = 100.0

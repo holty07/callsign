@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/tuning_panel.tscn" id="2_tuning"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/bots/bot_spawner.gd" id="5_botspawner"]
 [ext_resource type="Script" path="res://scripts/core/group_marker.gd" id="6_marker"]
 [ext_resource type="Script" path="res://scripts/game/kill_zone.gd" id="7_killzone"]
+[ext_resource type="PackedScene" path="res://scenes/ui/round_result_overlay.tscn" id="8_roundresult"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_box"]
 
@@ -45,6 +46,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 15)
 [node name="TuningPanel" parent="." instance=ExtResource("2_tuning")]
 player_path = NodePath("../Player")
 camera_look_path = NodePath("../Player/Head")
+
+[node name="RoundResultOverlay" parent="." instance=ExtResource("8_roundresult")]
 
 [node name="DummyTarget" parent="." instance=ExtResource("3_dummy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
@@ -185,47 +188,47 @@ script = ExtResource("5_botspawner")
 [node name="SpawnPoint_Ground_East" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.1, 5)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_a_spawn_points"
 
 [node name="SpawnPoint_Ground_West" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.1, 5)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_b_spawn_points"
 
 [node name="SpawnPoint_Ground_NorthEast" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.1, -25)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_a_spawn_points"
 
 [node name="SpawnPoint_Ground_NorthWest" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.1, -25)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_b_spawn_points"
 
 [node name="SpawnPoint_Corridor" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.1, -5)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_a_spawn_points"
 
 [node name="SpawnPoint_Corridor_Far" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.1, 10)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_a_spawn_points"
 
 [node name="SpawnPoint_Ramp_Top" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 2.1, 5)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_b_spawn_points"
 
 [node name="SpawnPoint_Ramp_Bottom" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.1, 15)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_b_spawn_points"
 
 [node name="SpawnPoint_Stairs_Top" type="Marker3D" parent="BotSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -32.15)
 script = ExtResource("6_marker")
-group_name = "bot_spawn_points"
+group_name = "team_b_spawn_points"
 
 [node name="BotWaypoints" type="Node3D" parent="."]
 
@@ -293,13 +296,14 @@ group_name = "cover_points"
 
 [node name="PlayerSpawnPoint" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 15)
+script = ExtResource("6_marker")
+group_name = "team_a_spawn_points"
 
 [node name="KillZone" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -30, -10)
 collision_layer = 0
 collision_mask = 1
 script = ExtResource("7_killzone")
-player_spawn_point_path = NodePath("../PlayerSpawnPoint")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="KillZone"]
 shape = SubResource("BoxShape3D_killzone")

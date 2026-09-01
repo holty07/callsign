@@ -22,6 +22,14 @@ extends CharacterBody3D
 @export var death_tilt_deg: float = 90.0
 @export var death_fall_speed_deg: float = 260.0 # deg/s
 
+@export_group("Team Colour")
+@export var team_a_color: Color = Color(0.2, 0.45, 0.9) # blue — the player's default team
+@export var team_b_color: Color = Color(0.85, 0.15, 0.15) # red — the opposing team
+
+## Assigned by BotSpawner at spawn time, not exported here — a bot doesn't
+## pick its own team.
+var team_id: int = Team.A
+
 @onready var _nav_agent: NavigationAgent3D = $NavigationAgent3D
 @onready var _visual: Node3D = $Visual
 @onready var health: Health = $Health
@@ -70,6 +78,21 @@ func _ready() -> void:
 	add_to_group("combatants")
 	_nav_agent.target_desired_distance = arrival_distance
 	health.died.connect(_on_died)
+	_apply_team_color()
+
+
+## Tints this bot's visible mesh by team so an ally reads at a glance instead
+## of only being inferred from who Perception won't let it target. The torso
+## and head meshes share one StandardMaterial3D sub-resource across every
+## bot.tscn instance (see the scene file) — duplicating it per-bot before
+## recolouring keeps this from repainting every other bot too.
+func _apply_team_color() -> void:
+	var color := team_a_color if team_id == Team.A else team_b_color
+	for hit_zone_name in ["TorsoBody", "HeadHitZone"]:
+		var mesh: MeshInstance3D = _visual.get_node("%s/MeshInstance3D" % hit_zone_name)
+		var material: StandardMaterial3D = mesh.material_override.duplicate()
+		material.albedo_color = color
+		mesh.material_override = material
 
 
 func _on_died() -> void:
@@ -96,6 +119,10 @@ func is_move_finished() -> bool:
 
 func is_alive() -> bool:
 	return health.current_health > 0.0
+
+
+func get_team_id() -> int:
+	return team_id
 
 
 ## Pushes a difficulty tier's perception/aim/weapon values onto this bot.

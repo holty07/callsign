@@ -31,7 +31,9 @@ func test_spawner_applies_difficulty_to_every_bot() -> void:
 func test_spawner_falls_back_to_own_position_with_no_spawn_points() -> void:
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
 	spawner.bot_count = 1
-	spawner.spawn_points_group = "no_such_group_in_this_test"
+	# Neither default team group ("team_a_spawn_points"/"team_b_spawn_points")
+	# has any markers in this isolated test scene, so the fallback applies
+	# regardless of which team the one bot lands on.
 	spawner.global_position = Vector3(1.0, 2.0, 3.0)
 	add_child(spawner)
 	await get_tree().process_frame
@@ -55,7 +57,10 @@ func test_spawner_assigns_distinct_positions_when_enough_markers_exist() -> void
 
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
 	spawner.bot_count = 4
-	spawner.spawn_points_group = group
+	# Team split is irrelevant to this regression; put every bot on Team B so
+	# they all draw from the same marker group.
+	spawner.split_bots_across_teams = false
+	spawner.team_b_spawn_points_group = group
 	add_child(spawner)
 	await get_tree().process_frame
 
@@ -78,8 +83,8 @@ func test_spawner_finds_markers_declared_as_later_siblings() -> void:
 	# stacked on top of each other. Mirrors that ordering here: the marker
 	# is added as a LATER sibling of the spawner.
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
-	spawner.bot_count = 1
-	spawner.spawn_points_group = "later_sibling_markers"
+	spawner.bot_count = 1 # always lands on Team A under the default split
+	spawner.team_a_spawn_points_group = "later_sibling_markers"
 	add_child(spawner)
 
 	var marker: Marker3D = auto_free(Marker3D.new())

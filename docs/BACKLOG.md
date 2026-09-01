@@ -57,3 +57,19 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   logging stuck bot positions to a file to debug nav issues by data — not
   implemented. Worth adding once real playtesting surfaces actual stuck spots,
   rather than guessing where they'll be.
+
+## Noticed during M4 (Match loop) — Team Deathmatch
+
+- **The round-result display window doesn't freeze combat.** Between a round
+  ending and `MatchState.restart_round()` firing (`result_display_seconds`,
+  5 s default), players/bots can still move and fire. Kills in that window
+  just don't score (`register_kill` returns early once `round_over` is true)
+  and the restart repositions/heals everyone regardless — a deliberate
+  first-pass simplification, not a bug, but a real pause/freeze would read
+  better once there's a proper results screen (a later M4 checklist item).
+- **Spawn-point avoidance is still just `SpawnPointPicker`'s existing
+  any-nearby-living-combatant clear-radius check**, now applied per-team
+  instead of pooled. M4's own "Spawn system with enemy-proximity avoidance and
+  spawn protection window" checklist item is a more deliberate version of
+  this (e.g. not spawning within sight of an enemy, a brief post-spawn
+  invulnerability) and is still open.

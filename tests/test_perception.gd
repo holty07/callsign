@@ -39,6 +39,14 @@ func test_should_forget_requires_full_memory_duration() -> void:
 	assert_bool(Perception.should_forget(10.0, 5.0)).is_true()
 
 
+func test_is_hostile_is_false_for_the_same_team() -> void:
+	assert_bool(Perception.is_hostile(Team.A, Team.A)).is_false()
+
+
+func test_is_hostile_is_true_across_teams() -> void:
+	assert_bool(Perception.is_hostile(Team.A, Team.B)).is_true()
+
+
 func test_pick_target_returns_null_with_no_confirmed_sightings() -> void:
 	assert_object(Perception.pick_target(null, {})).is_null()
 

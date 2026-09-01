@@ -85,6 +85,13 @@ static func should_forget(time_since_seen: float, memory_duration: float) -> boo
 	return time_since_seen >= memory_duration
 
 
+## Same-team combatants are never valid targets — a bot never *chooses* to
+## aim at a teammate, independent of whether friendly fire can damage one
+## (that's a separate, weapon-level check; see weapon_base.gd).
+static func is_hostile(actor_team_id: int, other_team_id: int) -> bool:
+	return actor_team_id != other_team_id
+
+
 ## Which of this tick's confirmed-visible sightings to lock onto. Sticks
 ## with `current` as long as it's still among them, rather than always
 ## snapping to whichever is nearest right now — with several combatants at
@@ -121,6 +128,9 @@ func _physics_process(delta: float) -> void:
 		if node == _actor or not is_instance_valid(node) or not (node is Node3D):
 			continue
 		if _is_dead(node):
+			continue
+		if node.has_method("get_team_id") and _actor.has_method("get_team_id") \
+				and not is_hostile(_actor.get_team_id(), node.get_team_id()):
 			continue
 
 		var eye_origin := _eye.global_position

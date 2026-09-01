@@ -10,8 +10,6 @@
 class_name KillZone
 extends Area3D
 
-@export var spawn_points_group: String = "bot_spawn_points"
-@export var player_spawn_point_path: NodePath
 ## Same hazard SpawnPointPicker guards against elsewhere: landing on top of
 ## a living combatant spawns two fully-overlapping CharacterBody3D capsules
 ## that immediately depenetrate into each other at high speed.
@@ -34,12 +32,6 @@ func _on_body_entered(body: Node3D) -> void:
 
 
 func _pick_respawn_position(body: Node3D) -> Vector3:
-	if body is Bot:
-		return SpawnPointPicker.pick(get_tree(), spawn_points_group, body, clear_radius, body.global_position)
-
-	if not player_spawn_point_path.is_empty():
-		var marker := get_node_or_null(player_spawn_point_path)
-		if marker:
-			return marker.global_position
-
+	if body.has_method("get_team_id"):
+		return SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(body.get_team_id()), body, clear_radius, body.global_position)
 	return body.global_position

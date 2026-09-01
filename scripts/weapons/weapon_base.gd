@@ -214,10 +214,21 @@ func fire() -> void:
 		damage = Hitscan.apply_headshot_multiplier(damage, collider.is_head, headshot_multiplier)
 
 		var health: Health = collider.get_target_health()
+		var shooter := _owner_actor()
+		var victim := health.get_parent()
+		var shooter_team: int = shooter.get_team_id() if shooter and shooter.has_method("get_team_id") else -1
+		var victim_team: int = victim.get_team_id() if victim and victim.has_method("get_team_id") else -2
+
+		if WeaponBase.is_friendly_fire_blocked(MatchState.friendly_fire_enabled, shooter_team, victim_team):
+			return # bullet still visibly landed (tracer/decal above); no damage, no signal
+
 		var was_alive: bool = health.current_health > 0.0
 		health.apply_damage(damage, collider.is_head, hit.position)
 		if was_alive:
-			hit_confirmed.emit(collider.is_head, health.current_health <= 0.0)
+			var was_kill := health.current_health <= 0.0
+			hit_confirmed.emit(collider.is_head, was_kill)
+			if was_kill and victim.has_method("get_team_id"):
+				MatchState.register_kill(shooter_team, victim_team)
 
 
 ## Current spread cone half-angle, in radians: hipfire spread widened by the
@@ -309,6 +320,14 @@ func _find_ancestor(of_type) -> Node:
 			return node
 		node = node.get_parent()
 	return null
+
+
+## Whether a hit between these two team ids should be blocked outright rather
+## than applying damage. A team-kill that friendly fire does allow through
+## still never scores (see MatchState.register_kill) — that's a separate rule
+## enforced there, not here.
+static func is_friendly_fire_blocked(friendly_fire_enabled: bool, shooter_team_id: int, victim_team_id: int) -> bool:
+	return not friendly_fire_enabled and shooter_team_id == victim_team_id
 
 
 ## The player or bot this weapon belongs to, for identifying "who fired

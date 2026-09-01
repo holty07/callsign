@@ -32,6 +32,11 @@ func test_dead_bot_respawns_even_after_locking_onto_engage() -> void:
 	var bot_b: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
 	add_child(bot_a)
 	add_child(bot_b)
+	# Both bots default to Team.A — without distinct teams, Perception would
+	# exclude them from each other's targeting entirely and neither would
+	# ever reach Engage, silently defeating the whole point of this test.
+	bot_a.team_id = Team.A
+	bot_b.team_id = Team.B
 	bot_a.global_position = Vector3(0.0, 0.0, 0.0)
 	bot_b.global_position = Vector3(0.0, 0.0, -3.0)
 

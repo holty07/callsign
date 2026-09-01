@@ -85,3 +85,15 @@ already shipped with in earlier M3 commits; Easy and Hard are symmetric first-gu
 around it, not derived from anything. All other bot values (Perception's view_distance,
 BotAim's burst/reacquisition timing, WeaponBase's damage/recoil/fire rate) are shared across
 tiers — only the six columns above vary.
+
+## Match
+
+Lives as exported variables on `scripts/game/match_state.gd` (the `MatchState` autoload).
+First pass, not yet playtested.
+
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `score_limit` | 30 | Kills needed to end the round. Arbitrary first guess. |
+| `time_limit_seconds` | 600 s (10 min) | Matches the roadmap's own M4 "Done when" criterion — "play a full 10-minute match." |
+| `friendly_fire_enabled` | false | Off by default per design discussion: when on, damaging a teammate is allowed but never affects the scoreboard either way. |
+| `result_display_seconds` | 5 s | How long the round-result banner shows before auto-restart. Arbitrary first guess. |

@@ -55,13 +55,14 @@ class_name PMove
 
 @export_group("Death")
 ## Placeholder parity with bot.gd's action_respawn.gd — same default delay.
-## No death screen, ragdoll, or dedicated respawn marker yet; revisit once
-## the match loop (M4) owns round/respawn flow. Until then this just
-## proves combat death/respawn works for the player at all.
+## No death screen or ragdoll yet; revisit once the match loop (M4) owns
+## round/respawn flow beyond this checklist item.
 @export var respawn_delay: float = 3.0
-## Optional marker to respawn at; falls back to respawning in place
-## (same position, health reset) if left unassigned.
-@export var respawn_point_path: NodePath
+@export var team_id: int = Team.A
+## Same hazard SpawnPointPicker guards against everywhere else: landing a
+## respawn on top of a living combatant spawns two fully-overlapping
+## CharacterBody3D capsules that immediately depenetrate into each other.
+@export var clear_radius: float = 1.5
 
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var _head: Node3D = $Head
@@ -157,6 +158,10 @@ func is_alive() -> bool:
 	return _health.current_health > 0.0
 
 
+func get_team_id() -> int:
+	return team_id
+
+
 ## Resets health and teleports back to a spawn point, zeroing the private
 ## _velocity_qu this script tracks across ticks — setting the engine's own
 ## `velocity` alone isn't enough, since _physics_process below overwrites it
@@ -171,11 +176,7 @@ func respawn_at(spawn_position: Vector3) -> void:
 
 
 func _respawn_position() -> Vector3:
-	if not respawn_point_path.is_empty():
-		var marker := get_node_or_null(respawn_point_path)
-		if marker:
-			return marker.global_position
-	return global_position
+	return SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(team_id), self, clear_radius, global_position)
 
 
 ## No death animation/ragdoll yet (placeholder, same as bot.gd's own death
