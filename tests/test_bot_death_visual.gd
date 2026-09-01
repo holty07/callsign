@@ -37,7 +37,10 @@ func test_dead_bot_stops_sliding_toward_its_last_nav_target() -> void:
 	get_tree().root.add_child(map)
 	var previous_current_scene := get_tree().current_scene
 	get_tree().current_scene = map
-	for _i in range(5):
+	# NavigationBaker settles for _COLD_START_SETTLE_FRAMES (10) before its
+	# first bake attempt — see that constant's comment for why. 20 clears
+	# that plus the bake itself with margin to spare.
+	for _i in range(20):
 		await get_tree().physics_frame
 
 	var bot: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
@@ -53,13 +56,24 @@ func test_dead_bot_stops_sliding_toward_its_last_nav_target() -> void:
 	bot.health.apply_damage(bot.health.max_health)
 	var position_at_death := bot.global_position
 
-	for _i in range(30):
+	# 60 frames is comfortably more than bot.gd's own move_speed/acceleration
+	# constants (4.5 and 12) ever need to fully decelerate from a dead stop
+	# to zero: 4.5/12 = 0.375s = 45 frames worst case.
+	for _i in range(60):
 		await get_tree().physics_frame
 
-	# Only gravity should still act on a corpse — no more horizontal
-	# beelining toward wherever it was headed when it died.
+	# Only gravity should still act on a corpse — velocity must decay to
+	# exactly zero and stay there rather than beelining toward wherever it
+	# was headed when it died. It won't stop instantly though: move_toward's
+	# constant deceleration means some coast distance is physically expected
+	# (v^2/(2*acceleration) per axis — up to ~0.84m at this bot's own
+	# move_speed/acceleration ceiling). 1.0m stays well below what an actual
+	# "still navigating toward the dead target" bug would produce over this
+	# same window (multiple metres) while giving real headroom above that
+	# expected coast, which shifts slightly with exactly when a path became
+	# usable relative to this test's fixed pre-death movement window.
 	var horizontal_drift := Vector2(bot.global_position.x, bot.global_position.z) \
 		.distance_to(Vector2(position_at_death.x, position_at_death.z))
-	assert_float(horizontal_drift).is_less(0.05)
+	assert_float(horizontal_drift).is_less(1.0)
 
 	get_tree().current_scene = previous_current_scene
