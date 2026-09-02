@@ -13,6 +13,9 @@ extends ActionLeaf
 ## high speed — the same class of bug fixed for HitZone colliders and for
 ## BotSpawner's own initial placement, except this time on respawn, mid-match.
 @export var clear_radius: float = 1.5
+## Avoid respawning within this distance of a living enemy specifically —
+## teammates nearby are fine, an enemy in your face on spawn isn't.
+@export var enemy_avoid_radius: float = 15.0
 
 var _timer: float = -1.0
 
@@ -36,4 +39,4 @@ func tick(actor: Node, _blackboard: Blackboard) -> int:
 
 
 func _spawn_position(bot: Bot) -> Vector3:
-	return SpawnPointPicker.pick(bot.get_tree(), Team.spawn_group_name(bot.team_id), bot, clear_radius, bot.global_position)
+	return SpawnPointPicker.pick(bot.get_tree(), Team.spawn_group_name(bot.team_id), bot, clear_radius, bot.global_position, enemy_avoid_radius)

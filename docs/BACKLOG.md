@@ -67,9 +67,24 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   and the restart repositions/heals everyone regardless — a deliberate
   first-pass simplification, not a bug, but a real pause/freeze would read
   better once there's a proper results screen (a later M4 checklist item).
-- **Spawn-point avoidance is still just `SpawnPointPicker`'s existing
-  any-nearby-living-combatant clear-radius check**, now applied per-team
-  instead of pooled. M4's own "Spawn system with enemy-proximity avoidance and
-  spawn protection window" checklist item is a more deliberate version of
-  this (e.g. not spawning within sight of an enemy, a brief post-spawn
-  invulnerability) and is still open.
+- **No visual/HUD indicator that a combatant is currently spawn-protected.**
+  `Health.is_invulnerable()` is real and enforced, but nothing on screen shows
+  it — there's no HUD to hook into yet (a separate, later M4 checklist item).
+- **Spawn protection is pure damage immunity, first pass.** It doesn't
+  restrict the protected combatant's own firing or movement, and doesn't
+  break early on taking an action (some games end protection the moment you
+  shoot). Simplest version that still solves "spawned right into a kill".
+- **`kill_zone.gd`'s environmental insta-kill is also blocked by
+  invulnerability** — `Health`'s guard is uniform ("no special-cased
+  damage"), so a freshly-spawned combatant could in principle walk into the
+  kill zone unharmed for a moment. Harmless in practice since spawn points
+  aren't anywhere near it by map design.
+- **BUG, needs investigation: the player can stop being able to shoot
+  entirely.** Reported during manual playtesting of the spawn-protection/
+  hitmarker work (2026-09-03) — no repro steps captured yet. Not yet
+  connected to any specific change in this milestone. Once reproducible,
+  start with `WeaponBase._can_fire()`'s gates (`_is_reloading`,
+  `_fire_cooldown`, `_sprint_release_timer`, the empty-magazine
+  auto-reload path) and the new early-returns in `fire()` (friendly-fire
+  and spawn-protection blocks) — confirm first whether either is somehow
+  left set/true when it shouldn't be, rather than guessing at a fix blind.

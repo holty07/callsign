@@ -14,6 +14,9 @@ extends Area3D
 ## a living combatant spawns two fully-overlapping CharacterBody3D capsules
 ## that immediately depenetrate into each other at high speed.
 @export var clear_radius: float = 1.5
+## Avoid respawning within this distance of a living enemy specifically —
+## teammates nearby are fine, an enemy in your face on spawn isn't.
+@export var enemy_avoid_radius: float = 15.0
 
 
 func _ready() -> void:
@@ -33,5 +36,5 @@ func _on_body_entered(body: Node3D) -> void:
 
 func _pick_respawn_position(body: Node3D) -> Vector3:
 	if body.has_method("get_team_id"):
-		return SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(body.get_team_id()), body, clear_radius, body.global_position)
+		return SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(body.get_team_id()), body, clear_radius, body.global_position, enemy_avoid_radius)
 	return body.global_position

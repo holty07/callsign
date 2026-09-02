@@ -6,7 +6,7 @@ signal fired()
 signal reload_started()
 signal reloaded()
 signal ammo_changed(magazine_ammo: int, reserve_ammo: int)
-signal hit_confirmed(was_headshot: bool, was_kill: bool)
+signal hit_confirmed(was_headshot: bool, was_kill: bool, was_blocked_by_protection: bool)
 
 @export_group("Firing")
 @export var fire_rate_rpm: float = 700.0
@@ -222,11 +222,19 @@ func fire() -> void:
 		if WeaponBase.is_friendly_fire_blocked(MatchState.friendly_fire_enabled, shooter_team, victim_team):
 			return # bullet still visibly landed (tracer/decal above); no damage, no signal
 
+		if health.is_invulnerable():
+			# Spawn-protected: the bullet still visibly landed (tracer/decal
+			# above), and unlike a friendly-fire block, the shooter should be
+			# able to tell why it did nothing — the crosshair reads this flag
+			# to draw a distinct "blocked" marker instead of a normal hit.
+			hit_confirmed.emit(collider.is_head, false, true)
+			return
+
 		var was_alive: bool = health.current_health > 0.0
 		health.apply_damage(damage, collider.is_head, hit.position)
 		if was_alive:
 			var was_kill := health.current_health <= 0.0
-			hit_confirmed.emit(collider.is_head, was_kill)
+			hit_confirmed.emit(collider.is_head, was_kill, false)
 			if was_kill and victim.has_method("get_team_id"):
 				MatchState.register_kill(shooter_team, victim_team)
 

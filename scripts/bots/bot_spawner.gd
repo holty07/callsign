@@ -24,6 +24,9 @@ extends Node3D
 ## a living combatant spawns two fully-overlapping CharacterBody3D capsules
 ## that immediately depenetrate into each other at high speed.
 @export var clear_radius: float = 1.5
+## Avoid an initial placement within this distance of a living enemy
+## specifically — teammates nearby are fine, an enemy in your face isn't.
+@export var enemy_avoid_radius: float = 15.0
 
 
 ## Deferred a frame rather than spawning inline: _ready() runs in sibling
@@ -54,7 +57,12 @@ func _spawn_bot(index: int) -> void:
 	bot.team_id = (Team.A if index % 2 == 0 else Team.B) if split_bots_across_teams else Team.B
 	add_child(bot)
 	var group := team_a_spawn_points_group if bot.team_id == Team.A else team_b_spawn_points_group
-	bot.global_position = SpawnPointPicker.pick(get_tree(), group, bot, clear_radius, global_position)
+	var spawn_position := SpawnPointPicker.pick(get_tree(), group, bot, clear_radius, global_position, enemy_avoid_radius)
+	# Routed through respawn_at() (not a direct global_position assignment) so
+	# an initial spawn gets the same spawn-protection window every later
+	# respawn does — its other effects (health reset, clearing death tilt,
+	# etc.) are all no-ops on a brand-new bot.
+	bot.respawn_at(spawn_position)
 	if difficulty:
 		bot.apply_difficulty(difficulty)
 	print("%s spawned at %s (team %d)" % [bot.name, bot.global_position, bot.team_id])

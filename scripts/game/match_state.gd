@@ -19,6 +19,13 @@ signal round_restarted()
 ## respawn on top of a living combatant spawns two fully-overlapping
 ## CharacterBody3D capsules that immediately depenetrate into each other.
 @export var clear_radius: float = 1.5
+## Avoid respawning within this distance of a living enemy specifically —
+## teammates nearby are fine, an enemy in your face on spawn isn't.
+@export var enemy_avoid_radius: float = 15.0
+## Damage immunity granted by every respawn_at() call (Bot and PMove both
+## read this directly) — long enough that a spawn which does end up exposed
+## isn't an instant, unavoidable kill.
+@export var spawn_protection_seconds: float = 1.0
 
 var team_a_score: int = 0
 var team_b_score: int = 0
@@ -77,10 +84,10 @@ func _end_round(winning_team_id: int) -> void:
 	round_ended.emit(winning_team_id)
 
 
-## Resets scores/timer and respawns every combatant in place via the same
-## respawn_at() every death path already uses — it resets health/velocity
-## internally on both Bot and PMove, so there's no separate health-reset step
-## needed here.
+## Resets scores/timer and respawns every combatant via the same respawn_at()
+## every death path already uses — it resets health/velocity and grants a
+## fresh spawn-protection window internally on both Bot and PMove, so there's
+## no separate health-reset or invulnerability step needed here.
 func restart_round() -> void:
 	team_a_score = 0
 	team_b_score = 0
@@ -89,7 +96,7 @@ func restart_round() -> void:
 
 	for combatant in get_tree().get_nodes_in_group("combatants"):
 		if combatant.has_method("respawn_at") and combatant.has_method("get_team_id"):
-			var spawn_position := SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(combatant.get_team_id()), combatant, clear_radius, combatant.global_position)
+			var spawn_position := SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(combatant.get_team_id()), combatant, clear_radius, combatant.global_position, enemy_avoid_radius)
 			combatant.respawn_at(spawn_position)
 
 	round_restarted.emit()

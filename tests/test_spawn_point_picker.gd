@@ -87,3 +87,53 @@ func test_pick_returns_a_point_anyway_when_every_point_is_occupied() -> void:
 	# genuinely blocks the only point, forcing the "take it anyway" fallback.
 	var result := SpawnPointPicker.pick(get_tree(), group, null, 1.5, Vector3.ZERO)
 	assert_vector(result).is_equal_approx(only_point.global_position, Vector3(0.01, 0.01, 0.01))
+
+
+func test_pick_avoids_a_point_within_enemy_avoid_radius_of_a_living_enemy() -> void:
+	var group := "picker_test_markers_enemy_avoid"
+	var near_enemy := _make_marker(Vector3(0.0, 0.0, 0.0), group)
+	var far_from_enemy := _make_marker(Vector3(50.0, 0.0, 50.0), group)
+
+	var placing_bot: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
+	add_child(placing_bot)
+	placing_bot.team_id = Team.A
+
+	var enemy: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
+	add_child(enemy)
+	enemy.team_id = Team.B
+	enemy.global_position = Vector3(2.0, 0.0, 2.0) # outside clear_radius, inside enemy_avoid_radius of near_enemy
+
+	for _i in range(10): # random with replacement — check it's never the enemy-adjacent one
+		var result := SpawnPointPicker.pick(get_tree(), group, placing_bot, 1.5, Vector3.ZERO, 15.0)
+		assert_vector(result).is_equal_approx(far_from_enemy.global_position, Vector3(0.01, 0.01, 0.01))
+
+
+func test_pick_does_not_avoid_a_point_near_a_living_ally() -> void:
+	var group := "picker_test_markers_ally_ok"
+	var near_ally := _make_marker(Vector3(0.0, 0.0, 0.0), group)
+
+	var placing_bot: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
+	add_child(placing_bot)
+	placing_bot.team_id = Team.A
+
+	var ally: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
+	add_child(ally)
+	ally.team_id = Team.A
+	ally.global_position = Vector3(2.0, 0.0, 2.0) # outside clear_radius, inside enemy_avoid_radius, but same team
+
+	var result := SpawnPointPicker.pick(get_tree(), group, placing_bot, 1.5, Vector3(-1.0, -1.0, -1.0), 15.0)
+	assert_vector(result).is_equal_approx(near_ally.global_position, Vector3(0.01, 0.01, 0.01))
+
+
+func test_pick_ignores_enemy_avoidance_when_avoiding_node_has_no_team() -> void:
+	# Defensive: a caller without get_team_id() (shouldn't happen in
+	# practice) must not crash — enemy-specific avoidance simply doesn't apply.
+	var group := "picker_test_markers_no_team"
+	var marker := _make_marker(Vector3(0.0, 0.0, 0.0), group)
+
+	var enemy: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
+	add_child(enemy)
+	enemy.global_position = Vector3(1.0, 0.0, 1.0)
+
+	var result := SpawnPointPicker.pick(get_tree(), group, null, 1.5, Vector3(-1.0, -1.0, -1.0), 15.0)
+	assert_vector(result).is_equal_approx(marker.global_position, Vector3(0.01, 0.01, 0.01))

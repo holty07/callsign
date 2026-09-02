@@ -123,6 +123,34 @@ func test_health_reports_damage_and_death() -> void:
 	health.free()
 
 
+func test_health_ignores_damage_while_invulnerable() -> void:
+	var health := Health.new()
+	health.max_health = 100.0
+	health._ready()
+	health.grant_invulnerability(5.0)
+
+	health.apply_damage(50.0)
+
+	assert_float(health.current_health).is_equal(100.0)
+	health.free()
+
+
+func test_health_grant_invulnerability_of_zero_grants_no_protection() -> void:
+	# A deterministic stand-in for "the protection window has expired" —
+	# waiting out a real multi-second window in a test would be slow and
+	# flaky (this codebase doesn't unit-test SpawnReservations' own
+	# real-time expiry either, for the same reason).
+	var health := Health.new()
+	health.max_health = 100.0
+	health._ready()
+	health.grant_invulnerability(0.0)
+
+	health.apply_damage(50.0)
+
+	assert_float(health.current_health).is_equal(50.0)
+	health.free()
+
+
 func _make_weapon_with_camera() -> WeaponBase:
 	var camera: Camera3D = auto_free(Camera3D.new())
 	add_child(camera)

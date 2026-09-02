@@ -27,6 +27,7 @@ func test_bot_lies_flat_after_dying_and_stands_back_up_on_respawn() -> void:
 	bot.respawn_at(Vector3(1.0, 0.0, 1.0))
 	assert_float(bot.get_node("Visual").rotation_degrees.x).is_equal_approx(0.0, 0.01)
 	assert_bool(bot.aim.visible).is_true()
+	assert_bool(bot.health.is_invulnerable()).is_true()
 
 
 func test_dead_bot_stops_sliding_toward_its_last_nav_target() -> void:

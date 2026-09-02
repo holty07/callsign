@@ -97,3 +97,5 @@ First pass, not yet playtested.
 | `time_limit_seconds` | 600 s (10 min) | Matches the roadmap's own M4 "Done when" criterion — "play a full 10-minute match." |
 | `friendly_fire_enabled` | false | Off by default per design discussion: when on, damaging a teammate is allowed but never affects the scoreboard either way. |
 | `result_display_seconds` | 5 s | How long the round-result banner shows before auto-restart. Arbitrary first guess. |
+| `spawn_protection_seconds` | 1 s | Damage immunity granted by every respawn. Confirmed too long at the original 3 s guess (matching `respawn_delay`) during manual playtesting; shortened. |
+| `enemy_avoid_radius` | 15 m | Distance a spawn pick avoids a living *enemy* specifically (teammates nearby are fine). Duplicated as its own export on `BotSpawner`, `action_respawn.gd`, `kill_zone.gd`, `MatchState`, and `PMove` — same per-class-export convention `clear_radius` already uses rather than one shared constant. Arbitrary first guess for this small greybox map. |

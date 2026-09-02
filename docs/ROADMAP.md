@@ -91,7 +91,7 @@ not "human-like". Log stuck positions to a file so you can fix nav issues by dat
 Turn the sandbox into a game.
 
 - [x] Team Deathmatch: two teams, score limit, time limit, round end and restart
-- [ ] Spawn system with enemy-proximity avoidance and spawn protection window
+- [x] Spawn system with enemy-proximity avoidance and spawn protection window
 - [ ] HUD: health, ammo, score, killfeed, crosshair with dynamic spread
 - [ ] Pause and settings menus: sensitivity, FOV, keybinds, volume, bot count
 - [ ] Main menu → match start → results → back to menu, with no crashes

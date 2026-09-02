@@ -63,6 +63,9 @@ class_name PMove
 ## respawn on top of a living combatant spawns two fully-overlapping
 ## CharacterBody3D capsules that immediately depenetrate into each other.
 @export var clear_radius: float = 1.5
+## Avoid respawning within this distance of a living enemy specifically —
+## teammates nearby are fine, an enemy in your face on spawn isn't.
+@export var enemy_avoid_radius: float = 15.0
 
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var _head: Node3D = $Head
@@ -168,15 +171,16 @@ func get_team_id() -> int:
 ## from _velocity_qu every tick regardless of what it was set to externally.
 func respawn_at(spawn_position: Vector3) -> void:
 	_health.reset()
+	_health.grant_invulnerability(MatchState.spawn_protection_seconds)
 	_velocity_qu = Vector3.ZERO
 	velocity = Vector3.ZERO
 	global_position = spawn_position
 	_respawn_timer = -1.0
-	print("Player respawned at %s" % global_position)
+	print("Player respawned at %s (protected %.1fs)" % [global_position, MatchState.spawn_protection_seconds])
 
 
 func _respawn_position() -> Vector3:
-	return SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(team_id), self, clear_radius, global_position)
+	return SpawnPointPicker.pick(get_tree(), Team.spawn_group_name(team_id), self, clear_radius, global_position, enemy_avoid_radius)
 
 
 ## No death animation/ragdoll yet (placeholder, same as bot.gd's own death

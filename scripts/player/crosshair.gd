@@ -5,7 +5,9 @@
 # vertical FOV. There's no ADS viewmodel yet, so while aiming this collapses
 # to a fixed centre dot as a "spot on accurate" placeholder — replace with a
 # proper ADS reticle once ADS viewmodels exist. Also draws a fading cross
-# hitmarker on top when the weapon reports a confirmed hit.
+# hitmarker on top when the weapon reports a confirmed hit — or a "no entry"
+# circle-with-slash instead, when the hit landed on a still-spawn-protected
+# target and did nothing.
 class_name Crosshair
 extends Control
 
@@ -29,11 +31,15 @@ extends Control
 @export var hitmarker_hit_color: Color = Color.WHITE
 @export var hitmarker_headshot_color: Color = Color(1.0, 0.85, 0.0)
 @export var hitmarker_kill_color: Color = Color(0.9, 0.1, 0.1)
+## Shown as a "prohibited" circle-with-slash instead of the usual cross —
+## the shot landed on a still-spawn-protected target and did nothing.
+@export var hitmarker_blocked_color: Color = Color(0.6, 0.6, 0.6)
 
 var _weapon: WeaponBase
 var _camera: Camera3D
 var _hitmarker_timer: float = 0.0
 var _hitmarker_color: Color = Color.WHITE
+var _hitmarker_blocked: bool = false
 
 
 func _ready() -> void:
@@ -72,20 +78,42 @@ func _draw() -> void:
 func _draw_hitmarker(center: Vector2) -> void:
 	var alpha := _hitmarker_timer / hitmarker_duration
 	var color := Color(_hitmarker_color.r, _hitmarker_color.g, _hitmarker_color.b, alpha)
+	if _hitmarker_blocked:
+		_draw_blocked_hitmarker(center, color)
+	else:
+		_draw_cross_hitmarker(center, color)
+
+
+func _draw_cross_hitmarker(center: Vector2, color: Color) -> void:
 	var d := hitmarker_length_px
 	draw_line(center + Vector2(-d, -d), center + Vector2(d, d), color, hitmarker_thickness_px)
 	draw_line(center + Vector2(-d, d), center + Vector2(d, -d), color, hitmarker_thickness_px)
 
 
-func _on_hit_confirmed(was_headshot: bool, was_kill: bool) -> void:
-	_hitmarker_color = hitmarker_color_for(was_headshot, was_kill, hitmarker_hit_color, hitmarker_headshot_color, hitmarker_kill_color)
+## A "no entry" circle with a single diagonal slash — drawn instead of the
+## usual cross when the shot landed on a still-spawn-protected target, so
+## "hit but did nothing" reads differently from a normal hit.
+func _draw_blocked_hitmarker(center: Vector2, color: Color) -> void:
+	var radius := hitmarker_length_px
+	draw_arc(center, radius, 0.0, TAU, 32, color, hitmarker_thickness_px)
+	var d := radius * 0.70710678 # cos(45deg) == sin(45deg): puts both ends exactly on the circle
+	draw_line(center + Vector2(-d, -d), center + Vector2(d, d), color, hitmarker_thickness_px)
+
+
+func _on_hit_confirmed(was_headshot: bool, was_kill: bool, was_blocked_by_protection: bool) -> void:
+	_hitmarker_blocked = was_blocked_by_protection
+	_hitmarker_color = hitmarker_color_for(was_headshot, was_kill, was_blocked_by_protection, hitmarker_hit_color, hitmarker_headshot_color, hitmarker_kill_color, hitmarker_blocked_color)
 	_hitmarker_timer = hitmarker_duration
 
 
-## Pure priority rule: a kill marker always wins, then headshot, then a plain
-## hit. Kept static and side-effect free so it's unit-testable without a live
-## weapon/signal wiring.
-static func hitmarker_color_for(was_headshot: bool, was_kill: bool, hit_color: Color, headshot_color: Color, kill_color: Color) -> Color:
+## Pure priority rule: a blocked (spawn-protected) hit always wins — it's the
+## most important thing to communicate, since a kill/headshot can't actually
+## have happened if the shot did nothing. Otherwise a kill wins, then
+## headshot, then a plain hit. Kept static and side-effect free so it's
+## unit-testable without a live weapon/signal wiring.
+static func hitmarker_color_for(was_headshot: bool, was_kill: bool, was_blocked_by_protection: bool, hit_color: Color, headshot_color: Color, kill_color: Color, blocked_color: Color) -> Color:
+	if was_blocked_by_protection:
+		return blocked_color
 	if was_kill:
 		return kill_color
 	if was_headshot:

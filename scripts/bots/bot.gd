@@ -144,13 +144,14 @@ func apply_difficulty(profile: BotDifficulty) -> void:
 ## re-spotted is the point.
 func respawn_at(spawn_position: Vector3) -> void:
 	health.reset()
+	health.grant_invulnerability(MatchState.spawn_protection_seconds)
 	velocity = Vector3.ZERO
 	global_position = spawn_position
 	stop_moving()
 	_death_tilt_current_deg = 0.0
 	_visual.rotation_degrees.x = 0.0
 	aim.visible = true
-	print("Bot %s respawned at %s" % [name, global_position])
+	print("Bot %s respawned at %s (protected %.1fs)" % [name, global_position, MatchState.spawn_protection_seconds])
 
 
 func _physics_process(delta: float) -> void:
