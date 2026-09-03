@@ -10,6 +10,7 @@ extends Node
 signal score_changed(team_a_score: int, team_b_score: int)
 signal round_ended(winning_team_id: int) # Team.A / Team.B / -1 for a draw
 signal round_restarted()
+signal kill_confirmed(shooter_name: String, victim_name: String, was_headshot: bool)
 
 @export var score_limit: int = 30
 @export var time_limit_seconds: float = 600.0
@@ -56,7 +57,7 @@ func _process(delta: float) -> void:
 ## that produced this kill was allowed to happen at all (see
 ## weapon_base.gd::is_friendly_fire_blocked); once a kill is reported here,
 ## a team-kill just never moves the scoreboard.
-func register_kill(shooter_team_id: int, victim_team_id: int) -> void:
+func register_kill(shooter_team_id: int, victim_team_id: int, shooter_name: String = "", victim_name: String = "", was_headshot: bool = false) -> void:
 	if round_over or shooter_team_id == victim_team_id:
 		return
 	if shooter_team_id != Team.A and shooter_team_id != Team.B:
@@ -67,6 +68,7 @@ func register_kill(shooter_team_id: int, victim_team_id: int) -> void:
 	else:
 		team_b_score += 1
 	score_changed.emit(team_a_score, team_b_score)
+	kill_confirmed.emit(shooter_name, victim_name, was_headshot)
 
 	if team_a_score >= score_limit or team_b_score >= score_limit:
 		_end_round(Team.A if team_a_score >= score_limit else Team.B)

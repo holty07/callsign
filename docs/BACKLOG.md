@@ -7,11 +7,12 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
 ## Already built ahead of schedule
 
 - **Crosshair with dynamic hipfire spread, and a hit-marker cross (white hit /
-  yellow headshot / red kill).** Built and playtested during M2 alongside the
-  weapon it visualises (`scripts/player/crosshair.gd`, `scenes/ui/crosshair.tscn`).
-  This covers the "crosshair with dynamic spread" part of M4's HUD checklist item
-  early. M4 still needs: health, ammo, score, and killfeed HUD elements, plus
-  wiring the hit-marker feed into a real killfeed once teams/scoring exist.
+  yellow headshot / red kill / grey blocked).** Built and playtested during M2
+  alongside the weapon it visualises (`scripts/player/crosshair.gd`,
+  `scenes/ui/crosshair.tscn`), extended during M4's spawn-protection work.
+  Covered the "crosshair with dynamic spread" part of M4's HUD checklist item
+  early; the rest (health, ammo, score, killfeed) landed later in the same
+  milestone.
 
 - **Player death/respawn flow, and any health HUD.** M3 gave the player a
   `Health`/`HitZone` (same components `DummyTarget` and bots use) purely so bot
@@ -67,9 +68,6 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   and the restart repositions/heals everyone regardless — a deliberate
   first-pass simplification, not a bug, but a real pause/freeze would read
   better once there's a proper results screen (a later M4 checklist item).
-- **No visual/HUD indicator that a combatant is currently spawn-protected.**
-  `Health.is_invulnerable()` is real and enforced, but nothing on screen shows
-  it — there's no HUD to hook into yet (a separate, later M4 checklist item).
 - **Spawn protection is pure damage immunity, first pass.** It doesn't
   restrict the protected combatant's own firing or movement, and doesn't
   break early on taking an action (some games end protection the moment you
@@ -88,3 +86,20 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   auto-reload path) and the new early-returns in `fire()` (friendly-fire
   and spawn-protection blocks) — confirm first whether either is somehow
   left set/true when it shouldn't be, rather than guessing at a fix blind.
+- **Killfeed doesn't cover `kill_zone.gd`'s environmental deaths.** Falling
+  out of the map never calls `MatchState.register_kill` at all (no
+  attacker to report), so a void death is silent in the feed. Consistent
+  with everything else about that path (no score either), just noted here
+  too.
+- **No team-colouring anywhere in the new HUD text** (score labels aside,
+  which do use `Bot`'s own default blue/red) — killfeed lines are plain
+  white, matching every other "ship ugly" placeholder this milestone.
+- **HUD elements are always visible** — none of them hide or reposition
+  for the round-result banner, a dead player, or the (still nonexistent)
+  pause menu. First pass; revisit once there's an actual menu/results flow
+  to coordinate with.
+- **ADS movement speed feels far too slow.** Reported during manual
+  playtesting of the HUD work (2026-09-03). `WeaponBase.ads_speed_scale`
+  (currently `0.6`, blended in via `speed_modifier` in `_update_ads()`) is
+  the value to tune — needs a proper playtest pass and a `docs/TUNING.md`
+  entry once settled, same as `pmove.gd`'s own movement constants got.

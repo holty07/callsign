@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/pmove.gd" id="1_pmove"]
 [ext_resource type="Script" path="res://scripts/player/camera_look.gd" id="2_camlook"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scripts/weapons/health.gd" id="5_health"]
 [ext_resource type="Script" path="res://scripts/weapons/hit_zone.gd" id="6_hitzone"]
 [ext_resource type="PackedScene" path="res://scenes/ui/death_overlay.tscn" id="7_deathoverlay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/health_display.tscn" id="8_healthdisplay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ammo_display.tscn" id="9_ammodisplay"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -55,3 +57,9 @@ camera_path = NodePath("../Head/Camera3D")
 
 [node name="DeathOverlay" parent="." instance=ExtResource("7_deathoverlay")]
 player_path = NodePath("..")
+
+[node name="HealthDisplay" parent="." instance=ExtResource("8_healthdisplay")]
+health_path = NodePath("../Health")
+
+[node name="AmmoDisplay" parent="." instance=ExtResource("9_ammodisplay")]
+weapon_path = NodePath("../Head/Camera3D/Rifle")

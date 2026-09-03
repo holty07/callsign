@@ -236,7 +236,7 @@ func fire() -> void:
 			var was_kill := health.current_health <= 0.0
 			hit_confirmed.emit(collider.is_head, was_kill, false)
 			if was_kill and victim.has_method("get_team_id"):
-				MatchState.register_kill(shooter_team, victim_team)
+				MatchState.register_kill(shooter_team, victim_team, shooter.name if shooter else "Unknown", victim.name, collider.is_head)
 
 
 ## Current spread cone half-angle, in radians: hipfire spread widened by the

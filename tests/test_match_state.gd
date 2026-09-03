@@ -56,6 +56,41 @@ func test_register_kill_is_ignored_once_the_round_is_over() -> void:
 	assert_int(MatchState.team_a_score).is_equal(0)
 
 
+func test_register_kill_emits_kill_confirmed_with_names_and_headshot_flag() -> void:
+	var kills := []
+	var on_kill_confirmed := func(shooter, victim, was_headshot): kills.append([shooter, victim, was_headshot])
+	MatchState.kill_confirmed.connect(on_kill_confirmed)
+
+	MatchState.register_kill(Team.A, Team.B, "Bot1", "Bot2", true)
+
+	assert_int(kills.size()).is_equal(1)
+	assert_array(kills[0]).is_equal(["Bot1", "Bot2", true])
+	MatchState.kill_confirmed.disconnect(on_kill_confirmed)
+
+
+func test_register_kill_does_not_emit_kill_confirmed_for_a_team_kill() -> void:
+	var kills := []
+	var on_kill_confirmed := func(shooter, victim, was_headshot): kills.append([shooter, victim, was_headshot])
+	MatchState.kill_confirmed.connect(on_kill_confirmed)
+
+	MatchState.register_kill(Team.A, Team.A, "Bot1", "Bot2", false)
+
+	assert_int(kills.size()).is_equal(0)
+	MatchState.kill_confirmed.disconnect(on_kill_confirmed)
+
+
+func test_register_kill_does_not_emit_kill_confirmed_once_the_round_is_over() -> void:
+	MatchState.round_over = true
+	var kills := []
+	var on_kill_confirmed := func(shooter, victim, was_headshot): kills.append([shooter, victim, was_headshot])
+	MatchState.kill_confirmed.connect(on_kill_confirmed)
+
+	MatchState.register_kill(Team.A, Team.B, "Bot1", "Bot2", false)
+
+	assert_int(kills.size()).is_equal(0)
+	MatchState.kill_confirmed.disconnect(on_kill_confirmed)
+
+
 func test_reaching_score_limit_ends_the_round_for_the_scoring_team() -> void:
 	MatchState.score_limit = 2
 	var winners := []

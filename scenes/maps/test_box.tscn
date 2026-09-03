@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/tuning_panel.tscn" id="2_tuning"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/core/group_marker.gd" id="6_marker"]
 [ext_resource type="Script" path="res://scripts/game/kill_zone.gd" id="7_killzone"]
 [ext_resource type="PackedScene" path="res://scenes/ui/round_result_overlay.tscn" id="8_roundresult"]
+[ext_resource type="PackedScene" path="res://scenes/ui/score_display.tscn" id="9_scoredisplay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/killfeed.tscn" id="10_killfeed"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_box"]
 
@@ -48,6 +50,10 @@ player_path = NodePath("../Player")
 camera_look_path = NodePath("../Player/Head")
 
 [node name="RoundResultOverlay" parent="." instance=ExtResource("8_roundresult")]
+
+[node name="ScoreDisplay" parent="." instance=ExtResource("9_scoredisplay")]
+
+[node name="Killfeed" parent="." instance=ExtResource("10_killfeed")]
 
 [node name="DummyTarget" parent="." instance=ExtResource("3_dummy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
