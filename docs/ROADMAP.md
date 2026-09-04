@@ -93,7 +93,7 @@ Turn the sandbox into a game.
 - [x] Team Deathmatch: two teams, score limit, time limit, round end and restart
 - [x] Spawn system with enemy-proximity avoidance and spawn protection window
 - [x] HUD: health, ammo, score, killfeed, crosshair with dynamic spread
-- [ ] Pause and settings menus: sensitivity, FOV, keybinds, volume, bot count
+- [x] Pause and settings menus: sensitivity, FOV, keybinds, volume, bot count
 - [ ] Main menu → match start → results → back to menu, with no crashes
 
 **Done when:** you can launch, play a full 10-minute match, and return to menu cleanly.

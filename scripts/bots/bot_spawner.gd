@@ -2,9 +2,9 @@
 #
 # Bot count and difficulty for a match: exported so each map instance can
 # set its own, and on by default per the roadmap's M3 "Done when" (a
-# winnable 4-bot free-for-all). A real match-start menu to change these
-# live is M4's job (see docs/ROADMAP.md) — this is the underlying knob
-# that menu will drive once it exists.
+# winnable 4-bot free-for-all). bot_count is overridden from the Settings
+# autoload at _ready() and kept live thereafter via bot_count_changed —
+# scripts/game/pause_menu.gd is what actually drives it now.
 class_name BotSpawner
 extends Node3D
 
@@ -38,9 +38,26 @@ extends Node3D
 ## other at the same point and flung each other away on contact). Waiting
 ## a frame makes this correct regardless of node order.
 func _ready() -> void:
+	bot_count = Settings.bot_count
+	Settings.bot_count_changed.connect(_on_bot_count_changed)
 	await get_tree().process_frame
 	for i in bot_count:
 		_spawn_bot(i)
+
+
+## Spawns extra bots or despawns existing ones to match a new count live —
+## the pause menu's bot-count slider drives this, even mid-match.
+func _on_bot_count_changed(new_count: int) -> void:
+	bot_count = new_count
+	var bots: Array = get_children().filter(func(c): return c is Bot)
+	var next_index := bots.size()
+	while bots.size() < bot_count:
+		_spawn_bot(next_index)
+		next_index += 1
+		bots = get_children().filter(func(c): return c is Bot)
+	while bots.size() > bot_count:
+		var extra: Bot = bots.pop_back()
+		extra.queue_free()
 
 
 ## Spawns and places one bot at a time (rather than pre-computing every

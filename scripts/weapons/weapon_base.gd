@@ -125,7 +125,12 @@ func _ready() -> void:
 	if _camera == null:
 		_camera = _find_ancestor(Camera3D)
 	if _camera:
-		_default_fov = _camera.fov
+		# Not _camera.fov: this node's _ready() runs before camera_look.gd's
+		# own _ready() (Rifle is a descendant of Head, so it's readied
+		# first), which is what actually seeds _camera.fov from Settings —
+		# reading Settings directly here avoids a stale first-frame value.
+		_default_fov = Settings.fov_degrees
+		Settings.fov_changed.connect(func(v): _default_fov = v)
 		_camera_look = _camera.get_parent()
 
 	_reload_timer = Timer.new()

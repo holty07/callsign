@@ -37,7 +37,7 @@ Playtested 2026-08-21 on the M1 greybox (`scenes/maps/test_box.tscn`).
 | `slide_cooldown` | 0.8 s | New. First pass, needs playtest. |
 | `max_step_height` | 0.3 m | First-pass stair-climb height; not yet stress-tested against the greybox stairs specifically. |
 | `floor_max_angle_deg` | 45° | Godot's own default slope limit; unchanged. |
-| `mouse_sensitivity` | 0.0025 | Personal preference, not a movement-feel value. |
+| `mouse_sensitivity` | 0.0025 | Personal preference, not a movement-feel value. Default now lives on the `Settings` autoload (`scripts/core/settings.gd`) — `camera_look.gd`'s own export is just the fallback seeded from it. User-overridable via the pause menu's Settings screen, persisted to `user://settings.cfg`. |
 | `bob_cycle_length_qu` | 130 qu | New: view bob. Phase advances with distance travelled rather than wall-clock time, so cadence tracks footwork and speeds up under sprint automatically. First pass, needs playtest. |
 | `bob_vertical_amplitude_m` | **0.1** m | New: view bob, vertical component. First value (0.02 m) read as no bob at all on playtest — too small to notice against normal running motion. 0.05 m was tried next, still felt weak; confirmed at 0.1 m by playtest. |
 | `bob_side_amplitude_m` | **0.1** m | New: view bob, side-to-side sway at half the vertical frequency. Raised alongside `bob_vertical_amplitude_m` to the same 0.1 m value; confirmed by playtest. |
@@ -99,3 +99,13 @@ First pass, not yet playtested.
 | `result_display_seconds` | 5 s | How long the round-result banner shows before auto-restart. Arbitrary first guess. |
 | `spawn_protection_seconds` | 1 s | Damage immunity granted by every respawn. Confirmed too long at the original 3 s guess (matching `respawn_delay`) during manual playtesting; shortened. |
 | `enemy_avoid_radius` | 15 m | Distance a spawn pick avoids a living *enemy* specifically (teammates nearby are fine). Duplicated as its own export on `BotSpawner`, `action_respawn.gd`, `kill_zone.gd`, `MatchState`, and `PMove` — same per-class-export convention `clear_radius` already uses rather than one shared constant. Arbitrary first guess for this small greybox map. |
+
+## Settings
+
+Lives as plain vars on `scripts/core/settings.gd` (the `Settings` autoload), user-overridable
+via the pause menu's Settings screen and persisted to `user://settings.cfg`. First pass.
+
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `fov_degrees` | 90° | Matches the value `Camera3D.fov` already shipped hardcoded in `scenes/player/player.tscn`; now the live, settings-driven default instead. |
+| `master_volume_linear` | 1.0 (0 dB) | Applied to Godot's own "Master" audio bus. Inaudible until M6 adds any actual sounds — the control is real and correctly wired, just has nothing to affect yet. |

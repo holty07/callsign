@@ -60,6 +60,11 @@ var _recoil_offset: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
+	mouse_sensitivity = Settings.mouse_sensitivity
+	Settings.mouse_sensitivity_changed.connect(func(v): mouse_sensitivity = v)
+	_camera.fov = Settings.fov_degrees
+	Settings.fov_changed.connect(func(v): _camera.fov = v)
+
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:

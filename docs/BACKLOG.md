@@ -103,3 +103,24 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   (currently `0.6`, blended in via `speed_modifier` in `_update_ads()`) is
   the value to tune — needs a proper playtest pass and a `docs/TUNING.md`
   entry once settled, same as `pmove.gd`'s own movement constants got.
+
+## Noticed during M4 (Match loop) — Pause and settings menus
+
+- **No gamepad support anywhere in the keybind system** — rebinding only
+  recognises keyboard and mouse-button events. Fine for now (no controller
+  input exists anywhere else in the project either).
+- **No duplicate-binding conflict detection.** Rebinding an action to a key
+  already used by another action silently leaves both actions bound to it
+  rather than warning or clearing the old one. First pass; a real UX pass
+  would want at least a warning.
+- **"Quit" calls `get_tree().quit()` directly**, closing the whole
+  application, since there's no main menu to return to yet — that's the very
+  next M4 checklist item. Revisit once it exists (should probably become
+  "back to main menu" instead, or the pause menu gains both options).
+- **`BotSpawner.difficulty` isn't exposed in the settings menu** — only
+  `bot_count`, per the checklist wording. Live difficulty adjustment (would
+  need re-applying `apply_difficulty()` to already-spawned bots) is
+  unaddressed.
+- **The keybind list doesn't scroll** — `SettingsPanel` is sized to fit the
+  current 10 rebindable actions; adding more without a `ScrollContainer`
+  would overflow the panel.

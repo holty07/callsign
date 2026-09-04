@@ -1,10 +1,24 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# BotSpawner._ready() now overwrites its own exported bot_count from the
+# Settings autoload (a live singleton for the whole test run), so every test
+# that cares about a specific count sets Settings.bot_count rather than
+# spawner.bot_count directly — the latter would just be clobbered. before_test
+# resets it so no test leaks its count into another.
 extends GdUnitTestSuite
+
+
+func before_test() -> void:
+	Settings.bot_count = 4
+
+
+func after_test() -> void:
+	before_test()
 
 
 func test_spawner_spawns_configured_bot_count() -> void:
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
-	spawner.bot_count = 3
+	Settings.bot_count = 3
 	add_child(spawner)
 	await get_tree().process_frame
 
@@ -18,7 +32,7 @@ func test_spawner_spawns_configured_bot_count() -> void:
 
 func test_spawner_applies_difficulty_to_every_bot() -> void:
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
-	spawner.bot_count = 2
+	Settings.bot_count = 2
 	spawner.difficulty = load("res://scenes/bots/difficulty_hard.tres")
 	add_child(spawner)
 	await get_tree().process_frame
@@ -30,7 +44,7 @@ func test_spawner_applies_difficulty_to_every_bot() -> void:
 
 func test_spawner_falls_back_to_own_position_with_no_spawn_points() -> void:
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
-	spawner.bot_count = 1
+	Settings.bot_count = 1
 	# Neither default team group ("team_a_spawn_points"/"team_b_spawn_points")
 	# has any markers in this isolated test scene, so the fallback applies
 	# regardless of which team the one bot lands on.
@@ -56,7 +70,7 @@ func test_spawner_assigns_distinct_positions_when_enough_markers_exist() -> void
 		marker.add_to_group(group)
 
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
-	spawner.bot_count = 4
+	Settings.bot_count = 4
 	# Team split is irrelevant to this regression; put every bot on Team B so
 	# they all draw from the same marker group.
 	spawner.split_bots_across_teams = false
@@ -83,7 +97,7 @@ func test_spawner_finds_markers_declared_as_later_siblings() -> void:
 	# stacked on top of each other. Mirrors that ordering here: the marker
 	# is added as a LATER sibling of the spawner.
 	var spawner: BotSpawner = auto_free(BotSpawner.new())
-	spawner.bot_count = 1 # always lands on Team A under the default split
+	Settings.bot_count = 1 # always lands on Team A under the default split
 	spawner.team_a_spawn_points_group = "later_sibling_markers"
 	add_child(spawner)
 
@@ -127,3 +141,36 @@ func test_test_box_map_bots_do_not_all_spawn_at_the_origin() -> void:
 	for child in spawner.get_children():
 		if child is Bot:
 			assert_vector(child.global_position).is_not_equal(Vector3.ZERO)
+
+
+func _count_bots(spawner: BotSpawner) -> int:
+	var bots := 0
+	for child in spawner.get_children():
+		if child is Bot:
+			bots += 1
+	return bots
+
+
+func test_raising_settings_bot_count_live_spawns_more_bots() -> void:
+	var spawner: BotSpawner = auto_free(BotSpawner.new())
+	Settings.bot_count = 2
+	add_child(spawner)
+	await get_tree().process_frame
+	assert_int(_count_bots(spawner)).is_equal(2)
+
+	Settings.bot_count_changed.emit(5)
+
+	assert_int(_count_bots(spawner)).is_equal(5)
+
+
+func test_lowering_settings_bot_count_live_despawns_bots() -> void:
+	var spawner: BotSpawner = auto_free(BotSpawner.new())
+	Settings.bot_count = 4
+	add_child(spawner)
+	await get_tree().process_frame
+	assert_int(_count_bots(spawner)).is_equal(4)
+
+	Settings.bot_count_changed.emit(1)
+	await get_tree().process_frame # queue_free() defers actual removal to end of frame
+
+	assert_int(_count_bots(spawner)).is_equal(1)
