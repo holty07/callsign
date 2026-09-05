@@ -145,6 +145,7 @@ func apply_difficulty(profile: BotDifficulty) -> void:
 func respawn_at(spawn_position: Vector3) -> void:
 	health.reset()
 	health.grant_invulnerability(MatchState.spawn_protection_seconds)
+	weapon.reset_ammo()
 	velocity = Vector3.ZERO
 	global_position = spawn_position
 	stop_moving()

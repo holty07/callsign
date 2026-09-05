@@ -70,6 +70,7 @@ class_name PMove
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var _head: Node3D = $Head
 @onready var _health: Health = $Health
+@onready var _weapon: WeaponBase = $Head/Camera3D/Rifle
 
 var _velocity_qu: Vector3 = Vector3.ZERO
 var _respawn_timer: float = -1.0
@@ -172,6 +173,7 @@ func get_team_id() -> int:
 func respawn_at(spawn_position: Vector3) -> void:
 	_health.reset()
 	_health.grant_invulnerability(MatchState.spawn_protection_seconds)
+	_weapon.reset_ammo()
 	_velocity_qu = Vector3.ZERO
 	velocity = Vector3.ZERO
 	global_position = spawn_position

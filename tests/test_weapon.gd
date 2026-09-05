@@ -192,3 +192,24 @@ func test_ai_controlled_weapon_reload_request_is_one_shot() -> void:
 	# mirroring Input.is_action_just_pressed's single-frame pulse.
 	weapon._physics_process(1.0 / 120.0)
 	assert_bool(weapon.ai_reload_requested).is_false()
+
+
+func test_reset_ammo_restores_full_magazine_and_reserve() -> void:
+	# Regression: a combatant respawning while dry on ammo (magazine and
+	# reserve both at 0) stayed stuck unable to fire at all — nothing
+	# reset ammo on respawn_at() until this method existed to call.
+	var weapon := _make_weapon_with_camera()
+	weapon._magazine_ammo = 0
+	weapon._reserve_ammo = 0
+	weapon._is_reloading = true
+
+	var ammo_events := []
+	var on_ammo_changed := func(magazine_ammo, reserve_ammo): ammo_events.append([magazine_ammo, reserve_ammo])
+	weapon.ammo_changed.connect(on_ammo_changed)
+
+	weapon.reset_ammo()
+
+	assert_int(weapon._magazine_ammo).is_equal(weapon.magazine_size)
+	assert_int(weapon._reserve_ammo).is_equal(weapon.reserve_ammo_max)
+	assert_bool(weapon._is_reloading).is_false()
+	assert_array(ammo_events).is_equal([[weapon.magazine_size, weapon.reserve_ammo_max]])

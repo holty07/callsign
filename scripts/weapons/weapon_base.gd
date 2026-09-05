@@ -283,6 +283,18 @@ func _finish_reload() -> void:
 	ammo_changed.emit(_magazine_ammo, _reserve_ammo)
 
 
+## Called by the owning Bot/PMove's own respawn_at() — a fresh spawn must
+## never be stuck holding whatever ammo (possibly zero/zero) it died with.
+## Cancels an in-progress reload outright rather than letting it finish into
+## a magazine that's about to be reset anyway.
+func reset_ammo() -> void:
+	_magazine_ammo = magazine_size
+	_reserve_ammo = reserve_ammo_max
+	_is_reloading = false
+	_reload_timer.stop()
+	ammo_changed.emit(_magazine_ammo, _reserve_ammo)
+
+
 func _update_sprint_out_timer(delta: float) -> void:
 	if _player and _player.is_sprinting():
 		_sprint_release_timer = sprint_out_delay

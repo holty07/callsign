@@ -77,15 +77,6 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   damage"), so a freshly-spawned combatant could in principle walk into the
   kill zone unharmed for a moment. Harmless in practice since spawn points
   aren't anywhere near it by map design.
-- **BUG, needs investigation: the player can stop being able to shoot
-  entirely.** Reported during manual playtesting of the spawn-protection/
-  hitmarker work (2026-09-03) — no repro steps captured yet. Not yet
-  connected to any specific change in this milestone. Once reproducible,
-  start with `WeaponBase._can_fire()`'s gates (`_is_reloading`,
-  `_fire_cooldown`, `_sprint_release_timer`, the empty-magazine
-  auto-reload path) and the new early-returns in `fire()` (friendly-fire
-  and spawn-protection blocks) — confirm first whether either is somehow
-  left set/true when it shouldn't be, rather than guessing at a fix blind.
 - **Killfeed doesn't cover `kill_zone.gd`'s environmental deaths.** Falling
   out of the map never calls `MatchState.register_kill` at all (no
   attacker to report), so a void death is silent in the feed. Consistent
