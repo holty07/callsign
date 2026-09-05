@@ -29,7 +29,7 @@ func _ready() -> void:
 
 	$MainPanel/VBox/ResumeButton.pressed.connect(_toggle_pause)
 	$MainPanel/VBox/SettingsButton.pressed.connect(_show_settings)
-	$MainPanel/VBox/QuitButton.pressed.connect(func(): get_tree().quit())
+	$MainPanel/VBox/MainMenuButton.pressed.connect(_on_main_menu_pressed)
 	$SettingsPanel/VBox/BackButton.pressed.connect(_show_main)
 	$SettingsPanel/VBox/ResetKeybindsButton.pressed.connect(_on_reset_keybinds)
 
@@ -68,6 +68,17 @@ func _toggle_pause() -> void:
 	if pausing:
 		_show_main()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if pausing else Input.MOUSE_MODE_CAPTURED
+
+
+## Unpausing first matters: SceneTree.paused is tree-wide, not scene-scoped —
+## leaving it true across change_scene_to_file would load the main menu
+## already frozen (its nodes all default to PROCESS_MODE_PAUSABLE too),
+## making its own buttons unresponsive.
+func _on_main_menu_pressed() -> void:
+	get_tree().paused = false
+	MatchState.reset_for_new_match()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 
 func _show_main() -> void:

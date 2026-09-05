@@ -136,6 +136,34 @@ func test_time_running_out_with_equal_scores_is_a_draw() -> void:
 	MatchState.round_ended.disconnect(on_round_ended)
 
 
+func test_reset_for_new_match_zeroes_scores_timer_and_round_over_flag() -> void:
+	MatchState.team_a_score = 10
+	MatchState.team_b_score = 7
+	MatchState.round_over = true
+	MatchState.time_remaining = 0.0
+
+	MatchState.reset_for_new_match()
+
+	assert_int(MatchState.team_a_score).is_equal(0)
+	assert_int(MatchState.team_b_score).is_equal(0)
+	assert_bool(MatchState.round_over).is_false()
+	assert_float(MatchState.time_remaining).is_equal(MatchState.time_limit_seconds)
+
+
+func test_reset_for_new_match_does_not_touch_any_combatant() -> void:
+	# Unlike restart_round(), this is used when a fresh scene (main menu ->
+	# match, or match -> main menu) has already placed everyone correctly —
+	# there's nothing to respawn, and it must not try.
+	var bot: Bot = auto_free((load("res://scenes/bots/bot.tscn") as PackedScene).instantiate())
+	add_child(bot)
+	bot.team_id = Team.A
+	bot.global_position = Vector3(42.0, 0.0, 42.0)
+
+	MatchState.reset_for_new_match()
+
+	assert_vector(bot.global_position).is_equal_approx(Vector3(42.0, 0.0, 42.0), Vector3(0.01, 0.01, 0.01))
+
+
 func test_restart_round_resets_scores_timer_and_round_over_flag() -> void:
 	MatchState.team_a_score = 10
 	MatchState.team_b_score = 7

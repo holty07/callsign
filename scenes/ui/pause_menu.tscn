@@ -52,9 +52,9 @@ text = "Resume"
 layout_mode = 2
 text = "Settings"
 
-[node name="QuitButton" type="Button" parent="MainPanel/VBox"]
+[node name="MainMenuButton" type="Button" parent="MainPanel/VBox"]
 layout_mode = 2
-text = "Quit"
+text = "Main Menu"
 
 [node name="SettingsPanel" type="Panel" parent="."]
 visible = false

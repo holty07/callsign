@@ -86,15 +86,23 @@ func _end_round(winning_team_id: int) -> void:
 	round_ended.emit(winning_team_id)
 
 
+## Zeroes the scoreboard/timer only — no respawn loop. Used both by
+## restart_round() (below) and by main_menu.gd/pause_menu.gd when starting or
+## leaving a match, where a freshly (un)loaded scene's own BotSpawner/Player
+## already start correctly positioned, so there's nothing to respawn.
+func reset_for_new_match() -> void:
+	team_a_score = 0
+	team_b_score = 0
+	time_remaining = time_limit_seconds
+	round_over = false
+
+
 ## Resets scores/timer and respawns every combatant via the same respawn_at()
 ## every death path already uses — it resets health/velocity and grants a
 ## fresh spawn-protection window internally on both Bot and PMove, so there's
 ## no separate health-reset or invulnerability step needed here.
 func restart_round() -> void:
-	team_a_score = 0
-	team_b_score = 0
-	time_remaining = time_limit_seconds
-	round_over = false
+	reset_for_new_match()
 
 	for combatant in get_tree().get_nodes_in_group("combatants"):
 		if combatant.has_method("respawn_at") and combatant.has_method("get_team_id"):

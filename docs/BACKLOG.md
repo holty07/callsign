@@ -113,10 +113,6 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
   already used by another action silently leaves both actions bound to it
   rather than warning or clearing the old one. First pass; a real UX pass
   would want at least a warning.
-- **"Quit" calls `get_tree().quit()` directly**, closing the whole
-  application, since there's no main menu to return to yet — that's the very
-  next M4 checklist item. Revisit once it exists (should probably become
-  "back to main menu" instead, or the pause menu gains both options).
 - **`BotSpawner.difficulty` isn't exposed in the settings menu** — only
   `bot_count`, per the checklist wording. Live difficulty adjustment (would
   need re-applying `apply_difficulty()` to already-spawned bots) is
@@ -124,3 +120,19 @@ just a holding pen so nothing gets lost or smuggled into the wrong milestone.
 - **The keybind list doesn't scroll** — `SettingsPanel` is sized to fit the
   current 10 rebindable actions; adding more without a `ScrollContainer`
   would overflow the panel.
+
+## Noticed during M4 (Match loop) — Main menu and match flow
+
+- **Settings aren't reachable from the main menu** — only via the in-match
+  pause menu. Out of scope for this checklist line (only asked for
+  start/results/back-to-menu); a player has to start a match once before
+  they can touch sensitivity/FOV/volume/bot count at all.
+- **No confirmation dialog on "Main Menu"** — clicking it mid-match abandons
+  the current match immediately, no "are you sure?".
+- **Scene transitions have no loading screen or fade** — `main_menu.gd`/
+  `pause_menu.gd` both call `change_scene_to_file()` directly, an instant
+  swap. Fine for this small greybox map; worth revisiting once M5's real map
+  is heavy enough to hitch.
+- **M4 is fully closed out** as of this line — `docs/ROADMAP.md`'s "Done
+  when" (launch, play a full 10-minute match, return to menu cleanly) is
+  satisfiable end to end for the first time.
