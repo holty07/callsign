@@ -84,6 +84,15 @@ var _slide_cooldown_timer: float = 0.0
 ## this is a live hook other systems poke, not a tuning value.
 var speed_modifier: float = 1.0
 
+## Set by the active weapon whenever the aim button is actually held (see
+## WeaponBase._ads_active) — true immediately, independent of the FOV/speed
+## blend's own transition timing. While true, horizontal acceleration below
+## uses pm_accelerate_instant instead of the ramped pm_accelerate: ADS is a
+## fixed-speed stance, the Quake accel/momentum feel stays reserved for
+## ordinary run/sprint movement. Not exported — this is a live hook other
+## systems poke, not a tuning value.
+var ads_active: bool = false
+
 ## Q3 bg_pmove.c PM_Friction, ported. `vel` is a full 3D velocity (Quake Z-up
 ## became Godot Y-up: the vertical axis is `y`, not `z`). `grounded` mirrors
 ## Q3's `pm->walking` — friction only bites while standing on the ground.
@@ -120,6 +129,19 @@ static func pm_accelerate(vel: Vector3, wishdir: Vector3, wishspeed: float, acce
 		accel_speed = add_speed
 
 	return vel + wishdir * accel_speed
+
+
+## ADS's fixed-speed aim stance, not a Quake momentum state: snaps the
+## velocity component along wishdir straight to wishspeed, both gaining and
+## shedding speed instantly, with no accel/delta ramp at all. The
+## orthogonal component (e.g. residual strafe momentum) passes through
+## untouched, same as pm_accelerate. Deliberately a separate function
+## rather than an "infinite accel" call into pm_accelerate — that one stays
+## exactly as ported from Quake III (see the file header) for ordinary
+## run/sprint movement.
+static func pm_accelerate_instant(vel: Vector3, wishdir: Vector3, wishspeed: float) -> Vector3:
+	var current_speed := vel.dot(wishdir)
+	return vel + wishdir * (wishspeed - current_speed)
 
 
 ## Whether a sprint-to-crouch slide should begin this tick. Gated on being
@@ -222,7 +244,9 @@ func _physics_process(delta: float) -> void:
 	_velocity_qu = pm_friction(_velocity_qu, friction, stop_speed, delta, grounded)
 
 	if not _is_sliding:
-		if grounded:
+		if ads_active:
+			_velocity_qu = pm_accelerate_instant(_velocity_qu, wish.dir, wish.speed)
+		elif grounded:
 			_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, ground_accel, delta)
 		else:
 			_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, air_accel, delta)

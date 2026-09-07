@@ -20,7 +20,7 @@ func _ready() -> void:
 	_health.died.connect(_on_died)
 
 
-func _on_damaged(amount: float, was_headshot: bool, _hit_position: Vector3) -> void:
+func _on_damaged(amount: float, was_headshot: bool, _source_position: Vector3) -> void:
 	print("Dummy hit for %.1f%s (%.0f/%.0f hp)" % [
 		amount,
 		" (HEADSHOT)" if was_headshot else "",

@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/death_overlay.tscn" id="7_deathoverlay"]
 [ext_resource type="PackedScene" path="res://scenes/ui/health_display.tscn" id="8_healthdisplay"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ammo_display.tscn" id="9_ammodisplay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/damage_indicator.tscn" id="10_damageindicator"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -63,3 +64,7 @@ health_path = NodePath("../Health")
 
 [node name="AmmoDisplay" parent="." instance=ExtResource("9_ammodisplay")]
 weapon_path = NodePath("../Head/Camera3D/Rifle")
+
+[node name="DamageIndicator" parent="." instance=ExtResource("10_damageindicator")]
+health_path = NodePath("../Health")
+player_path = NodePath("..")

@@ -63,6 +63,38 @@ func test_terminal_ground_speed_converges_to_wishspeed() -> void:
 	assert_float(vel.length()).is_equal_approx(wishspeed, 0.5)
 
 
+func test_accelerate_instant_reaches_wishspeed_in_a_single_tick_from_standstill() -> void:
+	var wishdir := Vector3(1.0, 0.0, 0.0)
+	var result := PMove.pm_accelerate_instant(Vector3.ZERO, wishdir, 320.0)
+	assert_vector(result).is_equal_approx(wishdir * 320.0, Vector3(0.0001, 0.0001, 0.0001))
+
+
+func test_accelerate_instant_sheds_speed_in_a_single_tick_when_above_wishspeed() -> void:
+	# The point of ADS being a fixed-speed stance, not a momentum state:
+	# pm_accelerate only ever adds speed (see test_accelerate_clamps_when_
+	# already_past_wishspeed above) — this one also has to shed it.
+	var wishdir := Vector3(1.0, 0.0, 0.0)
+	var vel := wishdir * 400.0 # e.g. carrying sprint speed into an ADS press
+	var result := PMove.pm_accelerate_instant(vel, wishdir, 320.0)
+	assert_vector(result).is_equal_approx(wishdir * 320.0, Vector3(0.0001, 0.0001, 0.0001))
+
+
+func test_accelerate_instant_preserves_the_orthogonal_component() -> void:
+	# Same projection convention as pm_accelerate: only the component along
+	# wishdir is touched, existing perpendicular momentum passes through.
+	var vel := Vector3(50.0, 0.0, 0.0)
+	var wishdir := Vector3(0.0, 0.0, 1.0)
+	var result := PMove.pm_accelerate_instant(vel, wishdir, 320.0)
+	assert_float(result.x).is_equal_approx(50.0, 0.0001)
+	assert_float(result.z).is_equal_approx(320.0, 0.0001)
+
+
+func test_accelerate_instant_is_a_noop_with_no_wish_input() -> void:
+	var vel := Vector3(120.0, 0.0, 40.0)
+	var result := PMove.pm_accelerate_instant(vel, Vector3.ZERO, 0.0)
+	assert_vector(result).is_equal_approx(vel, Vector3(0.0001, 0.0001, 0.0001))
+
+
 func test_air_accel_gains_speed_slower_than_ground_accel() -> void:
 	var wishdir := Vector3(1.0, 0.0, 0.0)
 	var wishspeed := 320.0

@@ -66,6 +66,8 @@ its own.
 | `sway_min_speed_qu` | 20 qu/s | New: matches `bob_min_speed_qu`. First pass, needs playtest. |
 | `sway_max_speed_qu` | 380 qu/s | New: matches `bob_max_speed_qu`. First pass, needs playtest. |
 | `sway_amplitude_smoothing` | 8 | New: matches `bob_amplitude_smoothing`. First pass, needs playtest. |
+| `ads_speed_scale` | **0.6** (assault rifle) | Flagged during M4 playtesting (see the M4 HUD commit's backlog note) as reading far too slow — but that was compounded by the ramped Quake accel below still easing into the reduced speed rather than hitting it immediately. Briefly raised to 0.8 to compensate, then dropped back to 0.6 (a 40% cut) once ADS accel below went instant and the ramp itself was no longer the problem. Per-weapon now that attachments are coming: this is the assault rifle's value specifically, not a shared default. |
+| ADS acceleration | **instant** | New: the ramp-up to ADS speed via the usual Quake `pm_accelerate` read as sluggish on its own, independent of whatever `ads_speed_scale` was set to — ADS is meant to be a fixed-speed aim stance, not a momentum state. `PMove.ads_active` (set by `WeaponBase._update_ads`) now routes ADS movement through a new `pm_accelerate_instant` that snaps straight to wishspeed instead, both gaining and shedding speed — see `pmove.gd`'s own doc comment on the function. `pm_accelerate`/`pm_friction` themselves are untouched; ordinary run/sprint movement keeps the exact Quake ramp. Confirmed by playtest. |
 
 ## Health
 

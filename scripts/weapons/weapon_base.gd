@@ -236,7 +236,7 @@ func fire() -> void:
 			return
 
 		var was_alive: bool = health.current_health > 0.0
-		health.apply_damage(damage, collider.is_head, hit.position)
+		health.apply_damage(damage, collider.is_head, origin)
 		if was_alive:
 			var was_kill := health.current_health <= 0.0
 			hit_confirmed.emit(collider.is_head, was_kill, false)
@@ -314,6 +314,7 @@ func _update_ads(delta: float) -> void:
 		_camera.fov = lerpf(_default_fov, ads_fov_degrees, _ads_blend)
 	if _player:
 		_player.speed_modifier = lerpf(1.0, ads_speed_scale, _ads_blend)
+		_player.ads_active = _ads_active
 
 
 func _update_reload_offset(delta: float) -> void:
