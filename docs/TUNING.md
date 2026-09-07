@@ -67,6 +67,17 @@ its own.
 | `sway_max_speed_qu` | 380 qu/s | New: matches `bob_max_speed_qu`. First pass, needs playtest. |
 | `sway_amplitude_smoothing` | 8 | New: matches `bob_amplitude_smoothing`. First pass, needs playtest. |
 
+## Health
+
+Lives as exported variables on `scripts/weapons/health.gd`. First pass, not yet
+playtested.
+
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `max_health` | 100 | Genre convention. Unchanged since M3. |
+| `regen_delay_seconds` | 4 s | How long since the last hit before regen starts. Arbitrary first guess. |
+| `regen_rate_per_second` | 40 HP/s | Applied continuously once the delay clears (`Health.regen_step`), not as a lump sum — a full heal from empty takes 2.5 s. Arbitrary first guess. |
+
 ## Bots
 
 Difficulty tiers (`scripts/bots/bot_difficulty.gd`, presets in `scenes/bots/difficulty_*.tres`)

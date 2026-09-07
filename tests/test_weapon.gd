@@ -151,6 +151,42 @@ func test_health_grant_invulnerability_of_zero_grants_no_protection() -> void:
 	health.free()
 
 
+func test_regen_step_does_nothing_before_the_delay_elapses() -> void:
+	var result := Health.regen_step(60.0, 100.0, 3.9, 4.0, 40.0, 0.1)
+	assert_float(result).is_equal(60.0)
+
+
+func test_regen_step_does_nothing_to_a_dead_target() -> void:
+	var result := Health.regen_step(0.0, 100.0, 10.0, 4.0, 40.0, 0.1)
+	assert_float(result).is_equal(0.0)
+
+
+func test_regen_step_does_nothing_once_already_full() -> void:
+	var result := Health.regen_step(100.0, 100.0, 10.0, 4.0, 40.0, 0.1)
+	assert_float(result).is_equal(100.0)
+
+
+func test_regen_step_heals_gradually_rather_than_in_one_lump() -> void:
+	# The point of ticking regen every delta rather than applying
+	# rate_per_second * (time_since_damage - delay_seconds) in one go: a
+	# single small tick just past the delay should only add a sliver of
+	# health, not the full second's worth.
+	var result := Health.regen_step(60.0, 100.0, 4.0, 4.0, 40.0, 0.1)
+	assert_float(result).is_equal_approx(64.0, 0.0001)
+
+
+func test_regen_step_accumulates_over_several_ticks() -> void:
+	var health := 60.0
+	for _i in range(10):
+		health = Health.regen_step(health, 100.0, 5.0, 4.0, 40.0, 0.1)
+	assert_float(health).is_equal_approx(100.0, 0.0001) # 60 + 40/s * 1s, clamped
+
+
+func test_regen_step_clamps_at_max_health() -> void:
+	var result := Health.regen_step(95.0, 100.0, 10.0, 4.0, 40.0, 0.5)
+	assert_float(result).is_equal(100.0)
+
+
 func _make_weapon_with_camera() -> WeaponBase:
 	var camera: Camera3D = auto_free(Camera3D.new())
 	add_child(camera)
