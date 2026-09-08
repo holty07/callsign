@@ -13,3 +13,6 @@ reports/
 # Editor / OS
 *.tmp
 .DS_Store
+
+# Claude Code personal overrides (not shared project config)
+.claude/settings.local.json
