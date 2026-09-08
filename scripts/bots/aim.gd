@@ -100,9 +100,8 @@ func _physics_process(delta: float) -> void:
 ## same contract as camera_look.gd's method of the same name, which is
 ## what lets WeaponBase call it on either without knowing which it has.
 func apply_recoil_offset(offset_deg: Vector2) -> void:
-	var new_offset := Vector2(deg_to_rad(offset_deg.x), deg_to_rad(offset_deg.y))
-	var delta_yaw := new_offset.y - _recoil_offset.y
-	get_parent().rotate_y(delta_yaw)
+	var new_offset := RecoilOffset.from_degrees(offset_deg)
+	get_parent().rotate_y(new_offset.y - _recoil_offset.y)
 	_recoil_offset = new_offset
 
 

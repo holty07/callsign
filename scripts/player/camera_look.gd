@@ -118,7 +118,6 @@ static func slide_tilt_target_deg(is_sliding: bool, tilt_deg: float) -> float:
 ## tick by the active weapon with a value that decays back toward zero as
 ## its recoil recovers.
 func apply_recoil_offset(offset_deg: Vector2) -> void:
-	var new_offset := Vector2(deg_to_rad(offset_deg.x), deg_to_rad(offset_deg.y))
-	var delta_yaw := new_offset.y - _recoil_offset.y
-	get_parent().rotate_y(delta_yaw)
+	var new_offset := RecoilOffset.from_degrees(offset_deg)
+	get_parent().rotate_y(new_offset.y - _recoil_offset.y)
 	_recoil_offset = new_offset

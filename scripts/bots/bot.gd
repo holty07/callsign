@@ -23,8 +23,8 @@ extends CharacterBody3D
 @export var death_fall_speed_deg: float = 260.0 # deg/s
 
 @export_group("Team Colour")
-@export var team_a_color: Color = Color(0.2, 0.45, 0.9) # blue — the player's default team
-@export var team_b_color: Color = Color(0.85, 0.15, 0.15) # red — the opposing team
+@export var team_a_color: Color = Team.COLOR_A
+@export var team_b_color: Color = Team.COLOR_B
 
 ## Assigned by BotSpawner at spawn time, not exported here — a bot doesn't
 ## pick its own team.

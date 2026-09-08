@@ -9,10 +9,10 @@
 class_name ScoreDisplay
 extends Control
 
-## Match Bot's own team_a_color/team_b_color defaults — duplicated here since
-## those are per-instance exports on a live Bot, not a shared constant.
-@export var team_a_color: Color = Color(0.2, 0.45, 0.9)
-@export var team_b_color: Color = Color(0.85, 0.15, 0.15)
+## Per-instance exports, like Bot's own team_a_color/team_b_color, defaulting
+## to the same shared Team constants.
+@export var team_a_color: Color = Team.COLOR_A
+@export var team_b_color: Color = Team.COLOR_B
 
 @onready var _team_a_label: Label = $HBox/TeamALabel
 @onready var _team_b_label: Label = $HBox/TeamBLabel

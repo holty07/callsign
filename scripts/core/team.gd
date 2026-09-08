@@ -8,5 +8,8 @@ class_name Team
 const A := 0
 const B := 1
 
+const COLOR_A := Color(0.2, 0.45, 0.9) # blue — the player's default team
+const COLOR_B := Color(0.85, 0.15, 0.15) # red — the opposing team
+
 static func spawn_group_name(team_id: int) -> String:
 	return "team_a_spawn_points" if team_id == A else "team_b_spawn_points"
