@@ -1,6 +1,8 @@
 {
+  "env": {
+    "GODOT_BIN": "godot"
+  },
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Bash(godot --headless *)",
       "Bash(godot --version)",
@@ -31,9 +33,10 @@
       "Bash(rm -rf:*)",
       "Read(./.env)",
       "Read(./.env.*)"
-    ]
+    ],
+    "defaultMode": "acceptEdits"
   },
-  "env": {
-    "GODOT_BIN": "godot"
+  "enabledPlugins": {
+    "ponytail@ponytail": true
   }
 }
