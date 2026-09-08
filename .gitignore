@@ -16,3 +16,7 @@ reports/
 
 # Claude Code personal overrides (not shared project config)
 .claude/settings.local.json
+
+# Proprietary reference material for internal ideas only — never commit.
+# See CLAUDE.md hard rule 1: no proprietary assets/code in this repo.
+docs/cod4_*
