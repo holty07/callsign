@@ -32,12 +32,18 @@ Get a repo that builds, tests, and runs an empty scene in CI.
 The whole project rests here. Nothing else starts until this feels right.
 
 - [x] `scripts/core/units.gd` — Quake unit constants
-- [x] `scripts/player/pmove.gd` — GPL-2.0 port of `PM_Friction` / `PM_Accelerate`,
-      with SPDX header and id Software attribution in a file header comment
+- [x] `scripts/player/pmove.gd` — direct velocity-toward-target-speed ground/air
+      movement model (`Vector2.move_toward` on horizontal velocity toward
+      wishdir * wishspeed), MIT-licensed, no momentum/air-strafe mechanic
+      (rewritten 2026-09-09, replacing an earlier Quake III `PM_Friction`/
+      `PM_Accelerate` port — see docs/TUNING.md's Movement section)
 - [x] Ground move, air move, jump, crouch, sprint, stair stepping, slope handling
 - [x] Raw-input mouse look, applied on physics tick
-- [x] Greybox test box: flat ground, stairs, ramps, a gap you can only clear with
-      correct air accel, a corridor for strafe testing
+- [x] Greybox test box: flat ground, stairs, ramps, a gap originally designed to
+      require Quake-style air accel to clear, a corridor for strafe testing
+      (note: post movement-rewrite, `air_accel_qu` is deliberately near-zero, so
+      this gap's original premise no longer holds — needs a follow-up look at
+      `scenes/maps/test_box.tscn`, out of scope for the movement rewrite itself)
 - [x] Live tuning panel (F1) exposing every movement variable with sliders
 - [x] `tests/test_pmove.gd` — friction curve, accel clamp, terminal ground speed,
       air-accel gain, deterministic replay of a fixed input sequence

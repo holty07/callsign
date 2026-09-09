@@ -1,111 +1,78 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: MIT
 extends GdUnitTestSuite
 
 const DELTA := 1.0 / 120.0
 
 
-func test_friction_reduces_speed_when_grounded() -> void:
-	var vel := Vector3(300.0, 0.0, 0.0)
-	var result := PMove.pm_friction(vel, 6.0, 100.0, DELTA, true)
-	assert_float(result.length()).is_less(300.0)
-	assert_float(result.length()).is_greater(0.0)
-	assert_float(result.x).is_greater(0.0)
+func test_horizontal_velocity_toward_decelerates_to_a_stop() -> void:
+	var vel := Vector3(300.0, 5.0, 0.0)
+	var result := PMove.horizontal_velocity_toward(vel, Vector3.ZERO, 0.0, 2200.0, DELTA)
+	assert_float(result.x).is_less(300.0)
+	assert_float(result.x).is_greater_equal(0.0)
+	assert_float(result.y).is_equal(5.0) # vertical untouched
 
 
-func test_friction_is_a_noop_in_air() -> void:
-	var vel := Vector3(300.0, -50.0, 40.0)
-	var result := PMove.pm_friction(vel, 6.0, 100.0, DELTA, false)
-	assert_vector(result).is_equal_approx(vel, Vector3(0.0001, 0.0001, 0.0001))
-
-
-func test_friction_zeroes_horizontal_below_threshold_but_keeps_vertical() -> void:
-	# Overall 3D speed must be below the 1 qu/s threshold for the early
-	# return to trigger, so the vertical component has to be small too.
-	var vel := Vector3(0.5, 0.5, 0.0)
-	var result := PMove.pm_friction(vel, 6.0, 100.0, DELTA, true)
+func test_horizontal_velocity_toward_reaches_zero_exactly_when_overshot() -> void:
+	# move_toward must clamp exactly at the target, not oscillate past it.
+	var vel := Vector3(1.0, 0.0, 0.0)
+	var result := PMove.horizontal_velocity_toward(vel, Vector3.ZERO, 0.0, 2200.0, DELTA)
 	assert_float(result.x).is_equal(0.0)
-	assert_float(result.z).is_equal(0.0)
-	assert_float(result.y).is_equal(0.5)
 
 
-func test_accelerate_clamps_when_already_past_wishspeed() -> void:
+func test_horizontal_velocity_toward_accelerates_toward_wishdir() -> void:
 	var wishdir := Vector3(1.0, 0.0, 0.0)
-	var vel := wishdir * 400.0
-	var result := PMove.pm_accelerate(vel, wishdir, 320.0, 10.0, DELTA)
-	assert_vector(result).is_equal_approx(vel, Vector3(0.0001, 0.0001, 0.0001))
+	var result := PMove.horizontal_velocity_toward(Vector3.ZERO, wishdir, 260.0, 2200.0, DELTA)
+	var expected: float = 2200.0 * DELTA
+	assert_float(result.x).is_equal_approx(expected, 0.0001)
+	assert_float(result.z).is_equal(0.0)
 
 
-func test_accelerate_projects_existing_velocity_before_clamping() -> void:
-	# The whole point of PM_Accelerate: accelerating perpendicular to your
-	# current velocity adds speed without first "paying down" what you
-	# already have. vel is pure +X; wishdir is pure +Z (perpendicular).
-	var vel := Vector3(200.0, 0.0, 0.0)
+func test_horizontal_velocity_toward_does_not_preserve_momentum_across_a_direction_change() -> void:
+	# The whole point of dropping the old Quake projection: turning costs you
+	# the speed you had, it doesn't add perpendicular speed for free. vel is
+	# pure +X; wishdir is pure +Z (perpendicular).
+	var vel := Vector3(260.0, 0.0, 0.0)
 	var wishdir := Vector3(0.0, 0.0, 1.0)
-	var wishspeed := 320.0
-	var accel := 10.0
-
-	var result := PMove.pm_accelerate(vel, wishdir, wishspeed, accel, DELTA)
-
-	var expected_gain: float = accel * DELTA * wishspeed
-	assert_float(result.x).is_equal_approx(200.0, 0.0001) # untouched
-	assert_float(result.z).is_equal_approx(expected_gain, 0.0001)
+	var result := PMove.horizontal_velocity_toward(vel, wishdir, 260.0, 2200.0, DELTA)
+	assert_float(result.x).is_less(260.0) # x is being pulled toward 0, not left alone
+	assert_float(result.z).is_greater(0.0)
 
 
 func test_terminal_ground_speed_converges_to_wishspeed() -> void:
 	var wishdir := Vector3(1.0, 0.0, 0.0)
-	var wishspeed := 320.0
+	var wishspeed := 260.0
 	var vel := Vector3.ZERO
 
-	for _i in range(600): # 5 simulated seconds at 120 Hz
-		vel = PMove.pm_friction(vel, 6.0, 100.0, DELTA, true)
-		vel = PMove.pm_accelerate(vel, wishdir, wishspeed, 10.0, DELTA)
+	for _i in range(120): # 1 simulated second at 120 Hz
+		vel = PMove.horizontal_velocity_toward(vel, wishdir, wishspeed, 2200.0, DELTA)
 
 	assert_float(vel.length()).is_equal_approx(wishspeed, 0.5)
 
 
-func test_accelerate_instant_reaches_wishspeed_in_a_single_tick_from_standstill() -> void:
+func test_air_rate_gains_speed_slower_than_ground_rate() -> void:
 	var wishdir := Vector3(1.0, 0.0, 0.0)
-	var result := PMove.pm_accelerate_instant(Vector3.ZERO, wishdir, 320.0)
-	assert_vector(result).is_equal_approx(wishdir * 320.0, Vector3(0.0001, 0.0001, 0.0001))
+	var wishspeed := 260.0
 
-
-func test_accelerate_instant_sheds_speed_in_a_single_tick_when_above_wishspeed() -> void:
-	# The point of ADS being a fixed-speed stance, not a momentum state:
-	# pm_accelerate only ever adds speed (see test_accelerate_clamps_when_
-	# already_past_wishspeed above) — this one also has to shed it.
-	var wishdir := Vector3(1.0, 0.0, 0.0)
-	var vel := wishdir * 400.0 # e.g. carrying sprint speed into an ADS press
-	var result := PMove.pm_accelerate_instant(vel, wishdir, 320.0)
-	assert_vector(result).is_equal_approx(wishdir * 320.0, Vector3(0.0001, 0.0001, 0.0001))
-
-
-func test_accelerate_instant_preserves_the_orthogonal_component() -> void:
-	# Same projection convention as pm_accelerate: only the component along
-	# wishdir is touched, existing perpendicular momentum passes through.
-	var vel := Vector3(50.0, 0.0, 0.0)
-	var wishdir := Vector3(0.0, 0.0, 1.0)
-	var result := PMove.pm_accelerate_instant(vel, wishdir, 320.0)
-	assert_float(result.x).is_equal_approx(50.0, 0.0001)
-	assert_float(result.z).is_equal_approx(320.0, 0.0001)
-
-
-func test_accelerate_instant_is_a_noop_with_no_wish_input() -> void:
-	var vel := Vector3(120.0, 0.0, 40.0)
-	var result := PMove.pm_accelerate_instant(vel, Vector3.ZERO, 0.0)
-	assert_vector(result).is_equal_approx(vel, Vector3(0.0001, 0.0001, 0.0001))
-
-
-func test_air_accel_gains_speed_slower_than_ground_accel() -> void:
-	var wishdir := Vector3(1.0, 0.0, 0.0)
-	var wishspeed := 320.0
-
-	var ground_vel := Vector3.ZERO
-	var air_vel := Vector3.ZERO
-	for _i in range(30):
-		ground_vel = PMove.pm_accelerate(ground_vel, wishdir, wishspeed, 10.0, DELTA)
-		air_vel = PMove.pm_accelerate(air_vel, wishdir, wishspeed, 1.0, DELTA)
+	var ground_vel := PMove.horizontal_velocity_toward(Vector3.ZERO, wishdir, wishspeed, 2200.0, DELTA)
+	var air_vel := PMove.horizontal_velocity_toward(Vector3.ZERO, wishdir, wishspeed, 80.0, DELTA)
 
 	assert_float(air_vel.length()).is_less(ground_vel.length())
+
+
+func test_slide_velocity_decay_reduces_speed_but_keeps_vertical() -> void:
+	var vel := Vector3(400.0, -50.0, 0.0)
+	var result := PMove.slide_velocity_decay(vel, 500.0, DELTA)
+	assert_float(result.x).is_less(400.0)
+	assert_float(result.x).is_greater(0.0)
+	assert_float(result.y).is_equal(-50.0)
+
+
+func test_slide_velocity_decay_zeroes_horizontal_below_threshold() -> void:
+	var vel := Vector3(0.5, 10.0, 0.0)
+	var result := PMove.slide_velocity_decay(vel, 500.0, DELTA)
+	assert_float(result.x).is_equal(0.0)
+	assert_float(result.z).is_equal(0.0)
+	assert_float(result.y).is_equal(10.0)
 
 
 func test_should_start_slide_when_all_conditions_are_met() -> void:
@@ -169,17 +136,14 @@ func _replay_fixed_sequence() -> Vector3:
 	var forward := Vector3(0.0, 0.0, -1.0)
 	var strafe := Vector3(1.0, 0.0, 0.0)
 
-	for _i in range(30):
-		vel = PMove.pm_friction(vel, 6.0, 100.0, DELTA, true)
-		vel = PMove.pm_accelerate(vel, forward, 320.0, 10.0, DELTA)
+	for _i in range(30): # ground accel
+		vel = PMove.horizontal_velocity_toward(vel, forward, 260.0, 2200.0, DELTA)
 
-	for _i in range(20):
-		vel = PMove.pm_friction(vel, 6.0, 100.0, DELTA, false)
-		vel = PMove.pm_accelerate(vel, strafe, 320.0, 1.0, DELTA)
+	for _i in range(20): # airborne strafe + gravity
+		vel = PMove.horizontal_velocity_toward(vel, strafe, 260.0, 80.0, DELTA)
 		vel.y -= 800.0 * DELTA
 
-	for _i in range(40):
-		vel = PMove.pm_friction(vel, 6.0, 100.0, DELTA, true)
-		vel = PMove.pm_accelerate(vel, Vector3.ZERO, 0.0, 10.0, DELTA)
+	for _i in range(40): # coast to a stop, grounded
+		vel = PMove.horizontal_velocity_toward(vel, Vector3.ZERO, 0.0, 2200.0, DELTA)
 
 	return vel

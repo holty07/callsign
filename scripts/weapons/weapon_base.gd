@@ -314,7 +314,6 @@ func _update_ads(delta: float) -> void:
 		_camera.fov = lerpf(_default_fov, ads_fov_degrees, _ads_blend)
 	if _player:
 		_player.speed_modifier = lerpf(1.0, ads_speed_scale, _ads_blend)
-		_player.ads_active = _ads_active
 
 
 func _update_reload_offset(delta: float) -> void:

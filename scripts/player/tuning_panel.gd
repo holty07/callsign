@@ -12,10 +12,8 @@ extends CanvasLayer
 
 const _PLAYER_FIELDS: Array[Dictionary] = [
 	{"prop": "move_speed", "label": "Move speed (qu/s)", "min": 0.0, "max": 600.0, "step": 1.0},
-	{"prop": "ground_accel", "label": "Ground accel", "min": 0.0, "max": 40.0, "step": 0.1},
-	{"prop": "ground_friction", "label": "Ground friction", "min": 0.0, "max": 20.0, "step": 0.1},
-	{"prop": "stop_speed", "label": "Stop speed (qu/s)", "min": 0.0, "max": 300.0, "step": 1.0},
-	{"prop": "air_accel", "label": "Air accel", "min": 0.0, "max": 10.0, "step": 0.05},
+	{"prop": "ground_accel_qu", "label": "Ground accel (qu/s^2)", "min": 0.0, "max": 6000.0, "step": 25.0},
+	{"prop": "air_accel_qu", "label": "Air accel (qu/s^2)", "min": 0.0, "max": 1000.0, "step": 5.0},
 	{"prop": "gravity_qu", "label": "Gravity (qu/s^2)", "min": 0.0, "max": 2000.0, "step": 5.0},
 	{"prop": "jump_velocity_qu", "label": "Jump velocity (qu/s)", "min": 0.0, "max": 600.0, "step": 1.0},
 	{"prop": "standing_height", "label": "Standing height (m)", "min": 1.0, "max": 2.2, "step": 0.01},
@@ -26,7 +24,7 @@ const _PLAYER_FIELDS: Array[Dictionary] = [
 	{"prop": "slide_min_speed", "label": "Slide min speed (qu/s)", "min": 0.0, "max": 500.0, "step": 5.0},
 	{"prop": "slide_duration", "label": "Slide duration (s)", "min": 0.1, "max": 2.0, "step": 0.05},
 	{"prop": "slide_speed_boost", "label": "Slide speed boost", "min": 1.0, "max": 2.0, "step": 0.01},
-	{"prop": "slide_friction", "label": "Slide friction", "min": 0.0, "max": 20.0, "step": 0.1},
+	{"prop": "slide_decel_qu", "label": "Slide decel (qu/s^2)", "min": 0.0, "max": 2000.0, "step": 10.0},
 	{"prop": "slide_cooldown", "label": "Slide cooldown (s)", "min": 0.0, "max": 3.0, "step": 0.05},
 	{"prop": "max_step_height", "label": "Max step height (m)", "min": 0.0, "max": 1.0, "step": 0.01},
 	{"prop": "floor_max_angle_deg", "label": "Floor max angle (deg)", "min": 0.0, "max": 89.0, "step": 1.0},

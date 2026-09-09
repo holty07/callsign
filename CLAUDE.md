@@ -32,6 +32,12 @@ keep their own licences (CC0, CC-BY, etc.) and are recorded per-file in
 `docs/ASSETS.md`. Do not assume an asset inherits the project licence, and do not
 relicense third-party assets.
 
+**Pending:** `scripts/player/pmove.gd` was rewritten (2026-09-09) to an original,
+non-Quake-derived movement model and now carries its own MIT SPDX header — it is no
+longer a GPL derivative. The rest of the repo is still GPL-2.0-or-later while a
+full-repo relicense to MIT is confirmed as a deliberate follow-up; don't treat this
+paragraph's GPL rationale as still applying to `pmove.gd` specifically.
+
 Any CC-BY asset requires visible attribution in the in-game credits screen, not just
 the ledger. Prefer CC0 to avoid the obligation entirely.
 
@@ -53,10 +59,13 @@ the ledger. Prefer CC0 to avoid the obligation entirely.
 
 ## Movement — the core of the project
 
-Movement feel is the single most important thing in this game. It is a GDScript port
-of Quake III Arena's `PM_Friction` and `PM_Accelerate` (GPL-2.0, id Software), living
-in `scripts/player/pmove.gd`. That file must carry a header comment attributing id
-Software and naming the upstream source, in addition to the SPDX line.
+Movement feel is the single most important thing in this game. `scripts/player/pmove.gd`
+is a direct velocity-toward-target-speed model, MIT-licensed, with no code derived from
+any commercial game. The project's movement reference is Phantom Forces (a Roblox
+military FPS) — studied only from public community sources (wikis, DevForum posts,
+discussion of how it feels), never from decompiled/extracted game code, per this file's
+hard rule 1. See `docs/TUNING.md`'s Movement section for the full research summary and
+rationale.
 
 Non-negotiables:
 
@@ -66,11 +75,14 @@ Non-negotiables:
   `InputEventMouseMotion` and apply on the physics tick. Do not add smoothing,
   acceleration, or filtering to look input, ever.
 - **Quake units throughout.** `const QU_TO_M := 0.0254` is defined once in
-  `scripts/core/units.gd`. All movement constants stay in Quake units so documented
-  tuning values can be dropped in directly. Convert only at the rendering boundary.
-- **The projection is the point.** `PM_Accelerate` projects current velocity onto the
-  desired direction *before* clamping the acceleration delta. That single line is what
-  produces the momentum and air control. Do not "simplify" it.
+  `scripts/core/units.gd`. This is this project's own internal convention for movement
+  constants (friendlier round numbers than metres), not a Quake compatibility
+  requirement — `pmove.gd` isn't a Quake port. Convert only at the rendering boundary.
+- **No momentum/projection.** `PMove.horizontal_velocity_toward` moves horizontal
+  velocity directly toward `wishdir * wishspeed` via `Vector2.move_toward`. There is
+  deliberately no velocity-projection step and no continuous air-strafe/bunnyhop
+  mechanic — matching the researched Phantom Forces feel, this is intentional design,
+  not a gap to "fix" by reintroducing momentum-preserving air control.
 - Tuning values live in exported variables on the player scene and are mirrored in
   `docs/TUNING.md`. Change values there, not by editing magic numbers inline.
 

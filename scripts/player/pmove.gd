@@ -1,28 +1,28 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: MIT
 #
-# Ground/air acceleration and friction are a GDScript port of PM_Friction and
-# PM_Accelerate from Quake III Arena's bg_pmove.c (id Software, GPL-2.0 —
-# https://github.com/id-Software/Quake-III-Arena). PM_Accelerate projects the
-# current velocity onto the wish direction *before* clamping the acceleration
-# delta for this tick — that projection is why turning in the air (or on the
-# ground) doesn't cost you the speed you already have, and it is preserved
-# exactly below. Do not "simplify" it.
+# Ground/air movement is a direct velocity-toward-target-speed model: each
+# tick, horizontal velocity moves toward wishdir * wishspeed at a fixed rate
+# via Vector2.move_toward (see horizontal_velocity_toward below). There is no
+# velocity-projection step, no friction curve, and deliberately no
+# air-strafe/bunnyhop mechanic — matching the grounded, state-driven feel
+# this project takes as its movement reference (see docs/TUNING.md). This
+# file contains no code derived from Quake III Arena and needs no GPL
+# licensing or id Software attribution.
 extends CharacterBody3D
 class_name PMove
 
 # All speed/accel/gravity constants below are in Quake units (see
-# scripts/core/units.gd) so documented Quake III tuning values can be dropped
-# in directly. They're converted to metres only where they meet Godot's
+# scripts/core/units.gd) — this project's own internal convention (friendlier
+# round numbers than metres for movement tuning), not a Quake compatibility
+# requirement. They're converted to metres only where they meet Godot's
 # physics, in _physics_process.
 
 @export_group("Ground")
 @export var move_speed: float = 260.0
-@export var ground_accel: float = 10.0
-@export var ground_friction: float = 10.0
-@export var stop_speed: float = 200.0
+@export var ground_accel_qu: float = 2200.0
 
 @export_group("Air")
-@export var air_accel: float = 1.0
+@export var air_accel_qu: float = 80.0
 
 @export_group("Jump & gravity")
 @export var gravity_qu: float = 800.0
@@ -40,13 +40,13 @@ class_name PMove
 
 @export_group("Slide")
 ## Sprinting into a crouch triggers a slide instead of an ordinary crouch:
-## a forward speed boost, low friction while it lasts, and a cooldown
+## a forward speed boost, a shallow decel while it lasts, and a cooldown
 ## before it can trigger again. Ends early if crouch is released, the
 ## timer runs out, or the ground drops out from under you.
 @export var slide_min_speed: float = 300.0
 @export var slide_duration: float = 0.65
 @export var slide_speed_boost: float = 1.15
-@export var slide_friction: float = 2.0
+@export var slide_decel_qu: float = 500.0
 @export var slide_cooldown: float = 0.8
 
 @export_group("Stepping & slopes")
@@ -84,64 +84,35 @@ var _slide_cooldown_timer: float = 0.0
 ## this is a live hook other systems poke, not a tuning value.
 var speed_modifier: float = 1.0
 
-## Set by the active weapon whenever the aim button is actually held (see
-## WeaponBase._ads_active) — true immediately, independent of the FOV/speed
-## blend's own transition timing. While true, horizontal acceleration below
-## uses pm_accelerate_instant instead of the ramped pm_accelerate: ADS is a
-## fixed-speed stance, the Quake accel/momentum feel stays reserved for
-## ordinary run/sprint movement. Not exported — this is a live hook other
-## systems poke, not a tuning value.
-var ads_active: bool = false
+## Direct velocity-toward-target-speed ground/air movement. A plain
+## move_toward on horizontal velocity, toward wishdir * wishspeed, at a fixed
+## rate in qu/s^2. Handles both slowing to a stop (wishspeed == 0) and
+## speeding up/redirecting — no separate friction pass, and deliberately no
+## momentum preserved across a direction change (changing wishdir re-targets
+## the vector directly rather than costing the speed already carried). This
+## is why the model has no air-strafe/bunnyhop mechanic. Vertical velocity
+## passes through untouched.
+static func horizontal_velocity_toward(vel: Vector3, wishdir: Vector3, wishspeed: float, rate: float, delta: float) -> Vector3:
+	var current := Vector2(vel.x, vel.z)
+	var target := Vector2(wishdir.x, wishdir.z) * wishspeed
+	var next := current.move_toward(target, rate * delta)
+	return Vector3(next.x, vel.y, next.y)
 
-## Q3 bg_pmove.c PM_Friction, ported. `vel` is a full 3D velocity (Quake Z-up
-## became Godot Y-up: the vertical axis is `y`, not `z`). `grounded` mirrors
-## Q3's `pm->walking` — friction only bites while standing on the ground.
-static func pm_friction(vel: Vector3, friction: float, stopspeed: float, delta: float, grounded: bool) -> Vector3:
-	var speed := vel.length()
+
+## Per-tick decay for an in-progress slide: flat qu/s^2 deceleration,
+## independent of horizontal_velocity_toward — slide is a discrete triggered
+## displacement state with its own short-lived behaviour, not an emergent
+## case of ordinary ground/air movement. Wish input is ignored entirely while
+## sliding; only this decay acts on horizontal velocity.
+static func slide_velocity_decay(vel: Vector3, decel: float, delta: float) -> Vector3:
+	var horizontal := Vector2(vel.x, vel.z)
+	var speed := horizontal.length()
 	if speed < 1.0:
 		return Vector3(0.0, vel.y, 0.0)
 
-	var drop := 0.0
-	if grounded:
-		var control := stopspeed if speed < stopspeed else speed
-		drop += control * friction * delta
-
-	var new_speed := speed - drop
-	if new_speed < 0.0:
-		new_speed = 0.0
-	new_speed /= speed
-
-	return vel * new_speed
-
-## Q3 bg_pmove.c PM_Accelerate, ported verbatim. `wishdir` must be normalized
-## (or zero). The projection of the current velocity onto wishdir — computed
-## before the accel delta is clamped to what's still needed — is the whole
-## point: accelerating perpendicular to your current velocity adds speed
-## without first "paying it down".
-static func pm_accelerate(vel: Vector3, wishdir: Vector3, wishspeed: float, accel: float, delta: float) -> Vector3:
-	var current_speed := vel.dot(wishdir)
-	var add_speed := wishspeed - current_speed
-	if add_speed <= 0.0:
-		return vel
-
-	var accel_speed := accel * delta * wishspeed
-	if accel_speed > add_speed:
-		accel_speed = add_speed
-
-	return vel + wishdir * accel_speed
-
-
-## ADS's fixed-speed aim stance, not a Quake momentum state: snaps the
-## velocity component along wishdir straight to wishspeed, both gaining and
-## shedding speed instantly, with no accel/delta ramp at all. The
-## orthogonal component (e.g. residual strafe momentum) passes through
-## untouched, same as pm_accelerate. Deliberately a separate function
-## rather than an "infinite accel" call into pm_accelerate — that one stays
-## exactly as ported from Quake III (see the file header) for ordinary
-## run/sprint movement.
-static func pm_accelerate_instant(vel: Vector3, wishdir: Vector3, wishspeed: float) -> Vector3:
-	var current_speed := vel.dot(wishdir)
-	return vel + wishdir * (wishspeed - current_speed)
+	var new_speed := maxf(speed - decel * delta, 0.0)
+	var next := horizontal * (new_speed / speed)
+	return Vector3(next.x, vel.y, next.y)
 
 
 ## Whether a sprint-to-crouch slide should begin this tick. Gated on being
@@ -240,16 +211,11 @@ func _physics_process(delta: float) -> void:
 		grounded = false
 		_end_slide()
 
-	var friction := slide_friction if _is_sliding else ground_friction
-	_velocity_qu = pm_friction(_velocity_qu, friction, stop_speed, delta, grounded)
-
-	if not _is_sliding:
-		if ads_active:
-			_velocity_qu = pm_accelerate_instant(_velocity_qu, wish.dir, wish.speed)
-		elif grounded:
-			_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, ground_accel, delta)
-		else:
-			_velocity_qu = pm_accelerate(_velocity_qu, wish.dir, wish.speed, air_accel, delta)
+	if _is_sliding:
+		_velocity_qu = slide_velocity_decay(_velocity_qu, slide_decel_qu, delta)
+	else:
+		var rate := ground_accel_qu if grounded else air_accel_qu
+		_velocity_qu = horizontal_velocity_toward(_velocity_qu, wish.dir, wish.speed, rate, delta)
 
 	if not grounded:
 		_velocity_qu.y -= gravity_qu * delta
@@ -260,11 +226,10 @@ func _physics_process(delta: float) -> void:
 
 
 ## Returns { dir: Vector3 (world-space, normalized, flattened), speed: float (qu/s) }.
-## Equivalent to Q3's PM_CmdScale + wishvel/wishdir/wishspeed dance, specialised
-## for continuous analog input instead of Q3's -127..127 quantized usercmd: for
-## a unit-length input vector, PM_CmdScale's diagonal-normalization collapses
-## to exactly "normalize the input, scale by its own length", which is what
-## this does directly.
+## Builds the wish direction/speed from raw analog movement input: normalizes
+## diagonal input to unit length so strafing isn't faster than a straight
+## line, then scales by move_speed and whichever state multiplier applies
+## (crouch/sprint) plus the externally-driven speed_modifier (ADS slow).
 func _wish_velocity() -> Dictionary:
 	var input := Vector2(
 		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
